@@ -76,3 +76,6 @@ void semantic_Analysis(struct node *T);
 void boolExp(struct node *T);
 void Exp(struct node *T);
 void objectCode(struct codenode *head);
+
+/*---将int型的输入转换为int值，可匹配十六进制---*/
+int to_int(char *str);

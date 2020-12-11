@@ -17,13 +17,13 @@
     } YYLVAL;
     #define YYSTYPE YYLVAL
 %}
-int         [0-9]+
-float       ([0-9]*\.[0-9]+)|([0-9]+\.)
+int         [+-]?[0-9]+|0x[A-Fa-f0-9]{1,32}
+float       [+-]?([0-9]*\.?[0-9]+|[0-9]+\.)
 id          [A-Za-z_][A-Za-z0-9_]* 
 /*----------------------------------------------------------------------------*/
 %%
-{int}       { yylval.type_int = atoi(yytext); return INT; }
-{float}     { yylval.type_float = atoi(yytext); return FLOAT; }
+{int}       { yylval.type_int = to_int(yytext); return INT; }  //int类型可匹配+-号及0x12a4的十六进制表示
+{float}     { yylval.type_float = atof(yytext); return FLOAT; }  //float可匹配+-号及“.123”的表示
 "int"       { strcpy(yylval.type_id, yytext); return TYPE; }
 "float"     { strcpy(yylval.type_id, yytext); return TYPE; }
 "return"    { return RETURN; }

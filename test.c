@@ -3,8 +3,10 @@ int func(int xx, float yy){
 	return 1;
 }
 int inc(){
-	int a = 0;
-	float b = 1.1;
+	int a = 0xffC23, c = -123, d = +1234;   //hahhah
+	/* ahodifha //jaoidjfo /*awejlijaefs*/
+	float b = -1.1;
+	if(a || b && c) { a = c;}
 	func(a, b);
 	return 0;
 }
