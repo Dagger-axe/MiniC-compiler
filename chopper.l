@@ -30,7 +30,7 @@ id          [A-Za-z_][A-Za-z0-9_]*
 "if"        { return IF; }
 "else"      { return ELSE; }
 "while"     { return WHILE; }
-{id}        { strcpy(yylval.type_id, yytext); return ID; }
+{id}        { strcpy(yylval.type_id, yytext); return ID; }  //由于优先级从上到下，因此该id不可放在关键字前，否则不会被识别为关键字而识别为标识符
 
 ";"			{ return SEMI; }
 ","			{ return COMMA; }
@@ -47,10 +47,10 @@ id          [A-Za-z_][A-Za-z0-9_]*
 ")"			{ return RP; }
 "{"			{ return LC; }
 "}"			{ return RC; }
-[\n]        { yycolumn = 1; }  //记录行号以便输出错误信息
+[\n]        { yycolumn = 1; }  //记录行号以便输出错误信息，换行后将列信息变为1
 [ \r\t]     { }  //空格、回车、制表符不做处理 
-"//".*\n    { }
-"/*"[\s\S]*"*/"     { }
-.			{/*输出词法分析错误编号、异常符号串、错误行列号*/}
+"//".*\n    { }  //行注释
+"/*".*"*/"  { }  //块注释
+.			{ }
 %%
 /*----------------------------------------------------------------------------*/ 

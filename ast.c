@@ -10,9 +10,9 @@ struct node *mknode(int kind, struct node *first, struct node *second, struct no
 }
 
 void displayAST(struct node *T, int indent){//对抽象语法树的先根遍历
-    int i=1;
+    int i = 1;
     struct node *T0;
-    if (T){
+    if(T){
         switch(T->kind){
             case EXT_DEF_LIST:{
                 displayAST(T->ptr[0], indent);    //显示该外部定义列表中的第一个
@@ -147,20 +147,54 @@ void displayAST(struct node *T, int indent){//对抽象语法树的先根遍历
                 printf("%*cFLAOT：%f\n", indent, ' ', T->type_float);
                 break;
             }
-            case ASSIGNOP:
-            case AND:
-            case OR:
-            case RELOP:
-            case PLUS:
-            case MINUS:
-            case STAR:
-            case DIV:{
+            case ASSIGNOP:{ }
+            case AND:{  //start here to my own 
                 printf("%*c%s\n", indent, ' ', T->type_id);
                 displayAST(T->ptr[0], indent + 3);
                 displayAST(T->ptr[1], indent + 3);
                 break;
             }
-            case NOT:
+            case OR:{
+                printf("%*c%s\n", indent, ' ', T->type_id);
+                displayAST(T->ptr[0], indent + 3);
+                displayAST(T->ptr[1], indent + 3);
+                break;
+            }
+            case RELOP:{
+                printf("%*c%s\n", indent, ' ', T->type_id);
+                displayAST(T->ptr[0], indent + 3);
+                displayAST(T->ptr[1], indent + 3);
+                break;
+            }
+            case PLUS:{
+                printf("%*c%s\n", indent, ' ', T->type_id);
+                displayAST(T->ptr[0], indent + 3);
+                displayAST(T->ptr[1], indent + 3);
+                break;
+            }
+            case MINUS:{
+                printf("%*c%s\n", indent, ' ', T->type_id);
+                displayAST(T->ptr[0], indent + 3);
+                displayAST(T->ptr[1], indent + 3);
+                break;
+            }
+            case STAR:{  //乘
+                printf("%*c%s\n", indent, ' ', T->type_id);
+                displayAST(T->ptr[0], indent + 3);
+                displayAST(T->ptr[1], indent + 3);
+                break;
+            }
+            case DIV:{  //end my own
+                printf("%*c%s\n", indent, ' ', T->type_id);
+                displayAST(T->ptr[0], indent + 3);
+                displayAST(T->ptr[1], indent + 3);
+                break;
+            }
+            case NOT:{  //my own
+                printf("%*c%s\n", indent, ' ', T->type_id);
+                displayAST(T->ptr[0], indent + 3);
+                break;
+            }
             case UMINUS:{
                 printf("%*c%s\n", indent, ' ', T->type_id);
                 displayAST(T->ptr[0], indent + 3);
@@ -174,15 +208,12 @@ void displayAST(struct node *T, int indent){//对抽象语法树的先根遍历
             }
             case ARGS:{
                 i = 1;
-                while(T){  /*ARGS表示实际参数表达式序列结点，其第一棵子树为头部实际参数表达式，第二棵子树为剩下的实际参数。*/
+                while(T){  /* ARGS表示实际参数表达式序列结点，其第一棵子树为头部实际参数表达式，第二棵子树为剩下的实际参数 */
                     struct node *T0 = T->ptr[0];
                     printf("%*c第%d个实际参数表达式：\n", indent, ' ', i++);
                     displayAST(T0, indent + 3);
                     T = T->ptr[1];
                 }
-                //printf("%*c第%d个实际参数表达式：\n",indent,' ',i);
-                //displayAST(T,indent+3);
-                printf("\n");
                 break;
             }
         }

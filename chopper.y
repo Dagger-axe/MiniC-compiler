@@ -122,12 +122,12 @@ Args: Exp COMMA Args { $$ = mknode(ARGS, $1, $3, NULL, yylineno); }
 
 %%
 
-void main(int argc, char *argv[]){
+int main(int argc, char *argv[]){
 	yyin = fopen(argv[1], "r");
-	if(!yyin) return;
+	if(!yyin) return 0;
 	yylineno = 1;
 	yyparse();
-	return;
+	return 0;
 }
 
 void yyerror(const char* fmt, ...){

@@ -1,5 +1,6 @@
-cc=g++
-chopper: chopper.l chopper.y
+chopper: chopper.l chopper.y ast.c
 	bison -d chopper.y
 	flex chopper.l
-	cc -o $@ chopper.tab.c lex.yy.c ast.c -lfl
+	cc -o chopper chopper.tab.c lex.yy.c ast.c -lfl
+clean:
+	rm -rf chopper
