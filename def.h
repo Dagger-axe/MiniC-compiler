@@ -27,50 +27,51 @@ struct codenode {   //中间代码TAC结点,采用双向循环链表存放
         struct codenode  *next, *prior;
 };
 
-struct node {    //以下对结点属性定义没有考虑存储效率，只是简单地列出要用到的一些属性
-	enum node_kind kind;               //结点类型
+struct node {  //以下对结点属性定义没有考虑存储效率，只是简单地列出要用到的一些属性
+	enum node_kind kind;            //结点类型
 	union {
-		  char type_id[33];             //由标识符生成的叶结点
-		  int type_int;                 //由整常数生成的叶结点
-		  float type_float;              //由浮点常数生成的叶结点
+		  char type_id[33];         //由标识符生成的叶结点
+		  int type_int;             //由整常数生成的叶结点
+		  float type_float;         //由浮点常数生成的叶结点
 	};
-    struct node *ptr[3];                   //子树指针，由kind确定有多少棵子树
-    int level;                    //层号
-    int place;                    //表示结点对应的变量或运算结果临时变量在符号表的位置序号
-    char Etrue[15], Efalse[15];      //对布尔表达式的翻译时，真假转移目标的标号
-    char Snext[15];               //该结点对应语句执行后的下一条语句位置标号
-    struct codenode *code;         //该结点中间代码链表头指针
+    struct node *ptr[3];            //子树指针，由kind确定有多少棵子树
+    int level;                      //层号
+    int place;                      //表示结点对应的变量或运算结果临时变量在符号表的位置序号
+    char Etrue[15], Efalse[15];     //对布尔表达式的翻译时，真假转移目标的标号
+    char Snext[15];                 //该结点对应语句执行后的下一条语句位置标号
+    struct codenode *code;          //该结点中间代码链表头指针
     char op[10];
-    int  type;                   //结点对应值的类型
-    int position;                     //语法单位所在位置行号
-    int offset;                   //偏移量
-    int width;                   //各种数据占用的字节数
+    int type;                       //结点对应值的类型
+    int position;                   //语法单位所在位置行号
+    int offset;                     //偏移量
+    int width;                      //各种数据占用的字节数
+    int num;
 };
 /*符号表中元素结构*/
 struct symbol {  //这里只列出了一个符号表项的部分属性，没考虑属性间的互斥
-    char name[33];     //变量或函数名
-    int level;   //层号，外部变量名或函数名，层号为0；形参为1；进入复合语句加1，退出减1
-    int type;           //变量类型或函数返回值类型
-    int  paramnum;    //形式参数个数
-    char alias[10];      //别名，为解决嵌套层次使用，可以使每个数据名称唯一
+    char name[33];      //变量或函数名
+    int level;          //层号，外部变量名或函数名，层号为0；形参为1；进入复合语句加1，退出减1
+    int type;           //变量类型或函数返回值类型, 1表示int，2表示float
+    int paramnum;       //形式参数个数
+    char alias[10];     //别名，为解决嵌套层次使用，可以使每个数据名称唯一
     char flag;          //符号标记缩写，函数：'F'  变量：'V'   参数：'P'  临时变量：'T'
     char offset;        //外部变量和局部变量，在其静态数据区或活动记录中的偏移量；
-				   //或函数活动记录大小，目标代码生成时使用
-    //其它你需要补充的信息可以增加保存...
+				        //或函数活动记录大小，目标代码生成时使用
+                        //其它你需要补充的信息可以增加保存...
 };
 /*符号表，是一个顺序栈，index初值为0*/
 struct symboltable{
-    struct symbol symbols[SYMBOLTABLESIZE];
-    int index;
+    struct symbol symbols[SYMBOLTABLESIZE];  //符号栈中每个变量的信息
+    int index;  //每进入一层，index自增1；每退出一层，index自减1；始终记录当前所在层数
 } symbolTable;
 
-struct symbol_scope_array {  /*保存当前作用域的符号在符号表中起始位置的序号；栈结构，每到达一个复合语句时，将符号表的index值进栈；离开复合语句时，取其退栈值修改符号表的index值，可以实现删除该复合语句中的所有局部变量和临时变量*/
-    int ScopeArray [30];
-    int top;
+struct symbol_scope_array {  //用于查询栈顶位置以及在退出一层时指导该层在栈中的起始
+    int ScopeArray[30];  //第i层的起始序号
+    int top;  //当前的栈顶元素
 } symbol_scope_Stack;
 
 
-struct node *mknode(int kind,struct node *first, struct node *second, struct node *third, int position);
+struct node *mknode(int kind, struct node *first, struct node *second, struct node *third, int position);
 void semantic_AnalysisInit(struct node *T);
 void semantic_Analysis(struct node *T);
 void boolExp(struct node *T);

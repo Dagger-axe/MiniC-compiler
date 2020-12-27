@@ -9,7 +9,7 @@ struct node *mknode(int kind, struct node *first, struct node *second, struct no
     return T;
 }
 
-void displayAST(struct node *T, int indent){//对抽象语法树的先根遍历
+void displayAST(struct node *T, int indent){  //对抽象语法树的先根遍历
     int i = 1;
     struct node *T0;
     if(T){
@@ -148,53 +148,19 @@ void displayAST(struct node *T, int indent){//对抽象语法树的先根遍历
                 break;
             }
             case ASSIGNOP:{ }
-            case AND:{  //start here to my own 
+            case AND: 
+            case OR: 
+            case RELOP: 
+            case PLUS: 
+            case MINUS: 
+            case STAR: 
+            case DIV:{ 
                 printf("%*c%s\n", indent, ' ', T->type_id);
                 displayAST(T->ptr[0], indent + 3);
                 displayAST(T->ptr[1], indent + 3);
                 break;
             }
-            case OR:{
-                printf("%*c%s\n", indent, ' ', T->type_id);
-                displayAST(T->ptr[0], indent + 3);
-                displayAST(T->ptr[1], indent + 3);
-                break;
-            }
-            case RELOP:{
-                printf("%*c%s\n", indent, ' ', T->type_id);
-                displayAST(T->ptr[0], indent + 3);
-                displayAST(T->ptr[1], indent + 3);
-                break;
-            }
-            case PLUS:{
-                printf("%*c%s\n", indent, ' ', T->type_id);
-                displayAST(T->ptr[0], indent + 3);
-                displayAST(T->ptr[1], indent + 3);
-                break;
-            }
-            case MINUS:{
-                printf("%*c%s\n", indent, ' ', T->type_id);
-                displayAST(T->ptr[0], indent + 3);
-                displayAST(T->ptr[1], indent + 3);
-                break;
-            }
-            case STAR:{  //乘
-                printf("%*c%s\n", indent, ' ', T->type_id);
-                displayAST(T->ptr[0], indent + 3);
-                displayAST(T->ptr[1], indent + 3);
-                break;
-            }
-            case DIV:{  //end my own
-                printf("%*c%s\n", indent, ' ', T->type_id);
-                displayAST(T->ptr[0], indent + 3);
-                displayAST(T->ptr[1], indent + 3);
-                break;
-            }
-            case NOT:{  //my own
-                printf("%*c%s\n", indent, ' ', T->type_id);
-                displayAST(T->ptr[0], indent + 3);
-                break;
-            }
+            case NOT: 
             case UMINUS:{
                 printf("%*c%s\n", indent, ' ', T->type_id);
                 displayAST(T->ptr[0], indent + 3);

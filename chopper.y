@@ -10,9 +10,9 @@
     extern int yylineno;
     extern char *yytext;
     extern FILE *yyin;
+    //消除warning的声明
     void yyerror(const char* fmt, ...);
-    void displayAST(struct node *,int);
-    //消除warning
+    void displayAST(struct node *, int);   
     int yylex();
 %}
 /*给出语法分析中非终结符和终结符的类型，供不同文法符号使用；对无语义子程序的规则，默认使用$$=$1，需要相应的类型匹配；默认类型是整型；样例中给出了整型、浮点型、字符串数组、抽象语法树节点4种，具体根据自己情况增减*/
@@ -26,10 +26,10 @@
 /*用%type来指定非终结符的语义值类型，用<>选择union中某个类型，后面列出同类型的非终结符*/
 %type <ptr> Program ExtDefList ExtDef Specifier ExtDecList FuncDec CompSt VarList VarDec ParamDec Stmt StmList DefList Def DecList Dec Exp Args
 
-/* 用% token来指定终结符的语义值类型，与非终结符类似*/
-%token <type_int> INT  //指定是type_int类型，用于AST树建立
+/* 用%token来指定终结符的语义值类型，与非终结符类似*/
+%token <type_int> INT           //指定是type_int类型，用于AST树建立
 %token <type_id> ID RELOP TYPE  //指定是type_id 类型
-%token <type_float> FLOAT         //指定是type_float类型
+%token <type_float> FLOAT       //指定是type_float类型
 /*其他bison对该文件编译时，带参数-d，生成的exp.tab.h中给这些单词进行编码，可在lex.l中包含parser.tab.h使用这些单词种类码，见附件1。如下*/
 
 %token LP RP LC RC SEMI COMMA   
@@ -47,13 +47,13 @@
 /*----------------------------------------------------------------------------*/
 %%
 /* 显示语法树，需要增加语义分析入口 */
-Program: ExtDefList { displayAST($1,0); }
+Program: ExtDefList { /* displayAST($1,0); */ semantic_AnalysisInit($1); }
     ; 
 /* 每个ExtDefList的结点，其第1棵子树对应一个外部变量声明或函数 */
 ExtDefList: { $$ = NULL; }
     | ExtDef ExtDefList { $$ = mknode(EXT_DEF_LIST, $1, $2, NULL, yylineno); }   
     ; 
-/* 该结点对应一个外部变量声明, 该结点对应一个函数定义*/
+/* 该结点对应一个外部变量声明, 该结点对应一个函数定义 */
 ExtDef: Specifier ExtDecList SEMI { $$ = mknode(EXT_VAR_DEF, $1, $2, NULL, yylineno); }   
     | Specifier FuncDec CompSt { $$ = mknode(FUNC_DEF, $1, $2, $3, yylineno); }         
     | error SEMI { $$ = NULL; }

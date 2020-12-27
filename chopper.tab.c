@@ -72,9 +72,9 @@
     extern int yylineno;
     extern char *yytext;
     extern FILE *yyin;
+    //消除warning的声明
     void yyerror(const char* fmt, ...);
-    void displayAST(struct node *,int);
-    //消除warning
+    void displayAST(struct node *, int);   
     int yylex();
 
 #line 81 "chopper.tab.c" /* yacc.c:339  */
@@ -1434,7 +1434,7 @@ yyreduce:
     {
         case 2:
 #line 50 "chopper.y" /* yacc.c:1646  */
-    { displayAST((yyvsp[0].ptr),0); }
+    { /* displayAST($1,0); */ semantic_AnalysisInit((yyvsp[0].ptr)); }
 #line 1439 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
