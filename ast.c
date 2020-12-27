@@ -147,6 +147,10 @@ void displayAST(struct node *T, int indent){  //对抽象语法树的先根遍�
                 printf("%*cFLAOT：%f\n", indent, ' ', T->type_float);
                 break;
             }
+            case CHAR:{
+                printf("%*cCHAR：%s\n", indent, ' ', T->type_char);
+                break;
+            }
             case ASSIGNOP:{ }
             case AND: 
             case OR: 

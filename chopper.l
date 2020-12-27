@@ -17,15 +17,24 @@
     } YYLVAL;
     #define YYSTYPE YYLVAL
 %}
+
+char        ('[A-Za-z0-9]')
 int         [+-]?[0-9]+|0x[A-Fa-f0-9]{1,32}
 float       [+-]?([0-9]*\.?[0-9]+|[0-9]+\.)
 id          [A-Za-z_][A-Za-z0-9_]* 
 /*----------------------------------------------------------------------------*/
 %%
+
+"//".*\n    { }  //行注释
+"/*".*"*/"  { }  //块注释
+
 {int}       { yylval.type_int = to_int(yytext); return INT; }  //int类型可匹配+-号及0x12a4的十六进制表示
 {float}     { yylval.type_float = atof(yytext); return FLOAT; }  //float可匹配+-号及“.123”的表示
+{char}		{ strcpy(yylval.type_char, yytext); return CHAR; }  //char类型
+
 "int"       { strcpy(yylval.type_id, yytext); return TYPE; }
 "float"     { strcpy(yylval.type_id, yytext); return TYPE; }
+"char"      { strcpy(yylval.type_id, yytext); return TYPE; }
 "return"    { return RETURN; }
 "if"        { return IF; }
 "else"      { return ELSE; }
@@ -48,9 +57,10 @@ id          [A-Za-z_][A-Za-z0-9_]*
 "{"			{ return LC; }
 "}"			{ return RC; }
 [\n]        { yycolumn = 1; }  //记录行号以便输出错误信息，换行后将列信息变为1
-[ \r\t]     { }  //空格、回车、制表符不做处理 
-"//".*\n    { }  //行注释
-"/*".*"*/"  { }  //块注释
-.			{ }
+[ \r\t]     { }  //空格、回车、制表符不做处理
+.			{ printf("Error type A :Mysterious character \"%s\"\n\t at Line %d\n", yytext, yylineno); }
 %%
-/*----------------------------------------------------------------------------*/ 
+
+int yywrap() {
+	return 1;
+}

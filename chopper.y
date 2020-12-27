@@ -20,6 +20,7 @@
 	int type_int;
 	float type_float;
 	char type_id[32];
+    char type_char[4];
 	struct node *ptr;
 };
 
@@ -28,8 +29,9 @@
 
 /* 用%token来指定终结符的语义值类型，与非终结符类似*/
 %token <type_int> INT           //指定是type_int类型，用于AST树建立
-%token <type_id> ID RELOP TYPE  //指定是type_id 类型
+%token <type_id> ID RELOP TYPE //指定是type_id 类型
 %token <type_float> FLOAT       //指定是type_float类型
+%token <type_char> CHAR         //指定是type_char类型
 /*其他bison对该文件编译时，带参数-d，生成的exp.tab.h中给这些单词进行编码，可在lex.l中包含parser.tab.h使用这些单词种类码，见附件1。如下*/
 
 %token LP RP LC RC SEMI COMMA   
@@ -47,7 +49,7 @@
 /*----------------------------------------------------------------------------*/
 %%
 /* 显示语法树，需要增加语义分析入口 */
-Program: ExtDefList { /* displayAST($1,0); */ semantic_AnalysisInit($1); }
+Program: ExtDefList { semantic_AnalysisInit($1); }  //displayAST($1,0);
     ; 
 /* 每个ExtDefList的结点，其第1棵子树对应一个外部变量声明或函数 */
 ExtDefList: { $$ = NULL; }
@@ -58,7 +60,7 @@ ExtDef: Specifier ExtDecList SEMI { $$ = mknode(EXT_VAR_DEF, $1, $2, NULL, yylin
     | Specifier FuncDec CompSt { $$ = mknode(FUNC_DEF, $1, $2, $3, yylineno); }         
     | error SEMI { $$ = NULL; }
     ;
-Specifier: TYPE { $$ = mknode(TYPE, NULL, NULL, NULL, yylineno); strcpy($$->type_id, $1); $$->type = !strcmp($1, "int") ? INT : FLOAT; }   
+Specifier: TYPE { $$ = mknode(TYPE, NULL, NULL, NULL, yylineno); strcpy($$->type_id, $1); if(!strcmp($1,"int"))$$->type = INT; if(!strcmp($1,"float"))$$->type = FLOAT; if(!strcmp($1,"char"))$$->type = CHAR; }   
     ;
 /* 每一个EXT_DECLIST的结点，其第一棵子树，对应一个变量名(ID类型的结点)，第二棵子树，对应剩下的外部变量名 */      
 ExtDecList: VarDec { $$ = $1; } 
@@ -115,6 +117,7 @@ Exp: Exp ASSIGNOP Exp   { $$ = mknode(ASSIGNOP, $1, $3, NULL, yylineno); strcpy(
     | ID                { $$ = mknode(ID, NULL, NULL, NULL, yylineno); strcpy($$->type_id, $1); }
     | INT               { $$ = mknode(INT, NULL, NULL, NULL, yylineno); $$->type_int = $1; $$->type = INT; }
     | FLOAT             { $$ = mknode(FLOAT, NULL, NULL, NULL, yylineno); $$->type_float = $1; $$->type = FLOAT; }
+    | CHAR              { $$ = mknode(CHAR, NULL, NULL, NULL, yylineno); strcpy($$->type_char, $1); $$->type = CHAR; }
     ;
 Args: Exp COMMA Args { $$ = mknode(ARGS, $1, $3, NULL, yylineno); }
     | Exp { $$ = mknode(ARGS, $1, NULL, NULL, yylineno); }
