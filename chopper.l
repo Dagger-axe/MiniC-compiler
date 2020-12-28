@@ -48,7 +48,13 @@ id          [A-Za-z_][A-Za-z0-9_]*
 ";"			{ return SEMI; }
 ","			{ return COMMA; }
 ">"|"<"|">="|"<="|"=="|"!=" { strcpy(yylval.type_id, yytext); return RELOP; }
+"+="        { return PLUSOP; }
+"-="        { return MINUSOP; }
+"*="        { return STAROP; }
+"/="        { return DIVOP; }
 "="			{ return ASSIGNOP; }
+"++"        { return INC; }
+"--"        { return DEC; }
 "+"			{ return PLUS; }
 "-"			{ return MINUS; }
 "*"			{ return STAR; }

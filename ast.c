@@ -159,12 +159,18 @@ void displayAST(struct node *T, int indent){  //对抽象语法树的先根遍�
                 printf("%*cCHAR：%s\n", indent, ' ', T->type_char);
                 break;
             }
-            case ASSIGNOP:{ }
+            case ASSIGNOP:  //以下均会向下执行DIV处，因为执行过程一致
             case AND: 
             case OR: 
             case RELOP: 
+            case PLUSOP:
+            case MINUSOP:
+            case STAROP:
+            case DIVOP:
             case PLUS: 
             case MINUS: 
+            case INC:
+            case DEC:
             case STAR: 
             case DIV:{ 
                 printf("%*c%s\n", indent, ' ', T->type_id);
