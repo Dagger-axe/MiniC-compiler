@@ -69,8 +69,10 @@ extern int yydebug;
     ELSE = 279,
     WHILE = 280,
     RETURN = 281,
-    UMINUS = 282,
-    LOWER_THEN_ELSE = 283
+    BREAK = 282,
+    CONTINUE = 283,
+    UMINUS = 284,
+    LOWER_THEN_ELSE = 285
   };
 #endif
 
@@ -87,7 +89,7 @@ union YYSTYPE
     char type_char[4];
 	struct node *ptr;
 
-#line 91 "chopper.tab.h" /* yacc.c:1909  */
+#line 93 "chopper.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

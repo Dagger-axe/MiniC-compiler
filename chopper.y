@@ -35,7 +35,7 @@
 /*其他bison对该文件编译时，带参数-d，生成的exp.tab.h中给这些单词进行编码，可在lex.l中包含parser.tab.h使用这些单词种类码，见附件1。如下*/
 
 %token LP RP LC RC SEMI COMMA   
-%token PLUS MINUS STAR DIV ASSIGNOP AND OR NOT IF ELSE WHILE RETURN
+%token PLUS MINUS STAR DIV ASSIGNOP AND OR NOT IF ELSE WHILE RETURN BREAK CONTINUE
 %left ASSIGNOP
 %left OR
 %left AND
@@ -48,14 +48,14 @@
 %nonassoc ELSE
 /*----------------------------------------------------------------------------*/
 %%
-/* 显示语法树，需要增加语义分析入口 */
+/* 文法规约终点：语义分析入口 */
 Program: ExtDefList { semantic_AnalysisInit($1); }  //displayAST($1,0);
     ; 
-/* 每个ExtDefList的结点，其第1棵子树对应一个外部变量声明或函数 */
+/* 外部变量定义列表 整个语法树 */
 ExtDefList: { $$ = NULL; }
-    | ExtDef ExtDefList { $$ = mknode(EXT_DEF_LIST, $1, $2, NULL, yylineno); }   
+    | ExtDef ExtDefList { $$ = mknode(EXT_DEF_LIST, $1, $2, NULL, yylineno); }  //每一个EXTDEFLIST的结点，其第1棵子树对应一个外部变量声明或函数   
     ; 
-/* 该结点对应一个外部变量声明, 该结点对应一个函数定义 */
+/* 外部变量声明 或 函数定义 */
 ExtDef: Specifier ExtDecList SEMI { $$ = mknode(EXT_VAR_DEF, $1, $2, NULL, yylineno); }   
     | Specifier FuncDec CompSt { $$ = mknode(FUNC_DEF, $1, $2, $3, yylineno); }         
     | error SEMI { $$ = NULL; }
@@ -78,9 +78,11 @@ VarList: ParamDec { $$ = mknode(PARAM_LIST, $1, NULL, NULL, yylineno); }
     ;
 ParamDec: Specifier VarDec { $$ = mknode(PARAM_DEC, $1, $2, NULL, yylineno); }
     ;
+/* 复合语句{定义 执行} */
 CompSt: LC DefList StmList RC { $$ = mknode(COMP_STM, $2, $3, NULL, yylineno); }
     ;
-StmList: {$$=NULL; }  
+/* 语句列表 */
+StmList: { $$ = NULL; }  
     | Stmt StmList { $$ = mknode(STM_LIST, $1, $2, NULL, yylineno); }
     ;
 Stmt: Exp SEMI { $$ = mknode(EXP_STMT, $1, NULL, NULL, yylineno); }
@@ -89,9 +91,12 @@ Stmt: Exp SEMI { $$ = mknode(EXP_STMT, $1, NULL, NULL, yylineno); }
     | IF LP Exp RP Stmt %prec LOWER_THEN_ELSE { $$ = mknode(IF_THEN, $3, $5, NULL, yylineno); }
     | IF LP Exp RP Stmt ELSE Stmt { $$ = mknode(IF_THEN_ELSE, $3, $5, $7, yylineno); }
     | WHILE LP Exp RP Stmt { $$ = mknode(WHILE, $3, $5, NULL, yylineno); }
+    | BREAK SEMI { $$ = mknode(BREAK, NULL, NULL, NULL, yylineno); }
+    | CONTINUE SEMI { $$ = mknode(CONTINUE, NULL, NULL, NULL, yylineno); }
     ;  
 DefList: { $$ = NULL; }
     | Def DefList { $$ = mknode(DEF_LIST, $1, $2, NULL, yylineno); }
+    | error SEMI { $$ = NULL; }
     ;
 Def: Specifier DecList SEMI { $$ = mknode(VAR_DEF, $1, $2, NULL, yylineno); }
     ;

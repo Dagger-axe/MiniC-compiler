@@ -91,6 +91,14 @@ void displayAST(struct node *T, int indent){  //对抽象语法树的先根遍�
                 displayAST(T->ptr[1], indent + 6);      //显示循环体
                 break;
             }
+            case BREAK:{
+                printf("%*c循环终止：BREAK\n", indent, ' ');
+                break;
+            }
+            case CONTINUE:{
+                printf("%*c循环继续：CONTINUE\n", indent, ' ');
+                break;
+            }
             case IF_THEN:{
                 printf("%*c条件语句(IF_THEN)：\n", indent, ' ');
                 printf("%*c条件：\n", indent + 3, ' ');

@@ -1,5 +1,7 @@
 /*----------------------------------------------------------------------------*/
 %option yylineno
+%option noyywrap
+
 %{
     #include "chopper.tab.h"
     #include <string.h>
@@ -39,6 +41,8 @@ id          [A-Za-z_][A-Za-z0-9_]*
 "if"        { return IF; }
 "else"      { return ELSE; }
 "while"     { return WHILE; }
+"break"     { return BREAK; }
+"continue"  { return CONTINUE; }
 {id}        { strcpy(yylval.type_id, yytext); return ID; }  //由于优先级从上到下，因此该id不可放在关键字前，否则不会被识别为关键字而识别为标识符
 
 ";"			{ return SEMI; }
@@ -60,7 +64,3 @@ id          [A-Za-z_][A-Za-z0-9_]*
 [ \r\t]     { }  //空格、回车、制表符不做处理
 .			{ printf("Error type A :Mysterious character \"%s\"\n\t at Line %d\n", yytext, yylineno); }
 %%
-
-int yywrap() {
-	return 1;
-}

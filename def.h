@@ -26,6 +26,8 @@ struct codenode {  //中间代码TAC结点,采用双向循环链表存放
         struct operandStruct opn1, opn2, result;  //2个操作数和运算结果
         struct codenode  *next, *prior;
 };
+struct codenode * breakcode;    //break所指位置指针
+struct codenode * continuecode; //continue所指位置指针
 
 struct node {  //以下对结点属性定义没有考虑存储效率，只是简单地列出要用到的一些属性
 	enum node_kind kind;            //结点类型

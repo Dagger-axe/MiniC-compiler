@@ -1,4 +1,6 @@
 #include "def.h"
+int in_while = 0;  //标记是否在循环里
+int loop_lev = 0;  //标记当前循环的层数
 
 char *strcat0(char *s1, char *s2) {
     static char result[10];
@@ -66,7 +68,7 @@ struct codenode *merge(int num, ...) {
     va_list ap;
     va_start(ap, num);
     h1 = va_arg(ap, struct codenode *);
-    while (--num>0) {
+    while (--num > 0) {
         h2 = va_arg(ap, struct codenode *);
         if (h1 == NULL) h1 = h2;
         else if (h2){
@@ -713,16 +715,35 @@ void semantic_Analysis(struct node *T) {
                     T->code = merge(6, T->ptr[0]->code, genLabel(T->ptr[0]->Etrue), T->ptr[1]->code, \
                                 genGoto(T->Snext), genLabel(T->ptr[0]->Efalse), T->ptr[2]->code);
                     break;
-        case WHILE: strcpy(T->ptr[0]->Etrue, newLabel());  //子结点继承属性的计算
+        case WHILE: breakcode = NULL;
+				    continuecode = NULL;                    
+                    strcpy(T->ptr[0]->Etrue, newLabel());  //ptr[0]存循环条件，子结点继承属性的计算
                     strcpy(T->ptr[0]->Efalse, T->Snext);
                     T->ptr[0]->offset = T->ptr[1]->offset = T->offset;
                     boolExp(T->ptr[0]);  //循环条件，要单独按短路代码处理
                     T->width = T->ptr[0]->width;
                     strcpy(T->ptr[1]->Snext, newLabel());
+                    in_while = 1;
+                    loop_lev++;
+                    breakcode = genGoto(T->Snext);  //记录出口，即整个while的出口
+                    continuecode = genGoto(T->ptr[1]->Snext);  //记录入口，即循环体执行结束后下一次执行的入口
                     semantic_Analysis(T->ptr[1]);  //循环体
-                    if (T->width<T->ptr[1]->width) T->width = T->ptr[1]->width;
+                    if (T->width < T->ptr[1]->width) T->width = T->ptr[1]->width;
                     T->code = merge(5, genLabel(T->ptr[1]->Snext), T->ptr[0]->code, \
-                    genLabel(T->ptr[0]->Etrue), T->ptr[1]->code, genGoto(T->ptr[1]->Snext));
+                                    genLabel(T->ptr[0]->Etrue), T->ptr[1]->code, genGoto(T->ptr[1]->Snext));
+                    in_while = 0;
+                    loop_lev--;
+                    breakcode = NULL;
+                    continuecode = NULL;
+                    break;
+        case BREAK: if (in_while == 0)
+					    semantic_error(T->position, T->type_id, "\"break\"不在循环中");
+                    T->code = breakcode;
+                    break;
+	    case CONTINUE:
+                    if (loop_lev <= 0)
+                        semantic_error(T->position, T->type_id, "\"coninue\"不在循环中");
+                    T->code = continuecode;
                     break;
         case EXP_STMT:
                     T->ptr[0]->offset = T->offset;
