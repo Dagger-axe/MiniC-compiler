@@ -56,7 +56,7 @@
 /*----------------------------------------------------------------------------*/
 %%
 /* 文法规约终点：语义分析入口 */
-Program: ExtDefList { displayAST($1, 0);semantic_AnalysisInit($1, filename); }  //displayAST($1, 0);
+Program: ExtDefList { semantic_AnalysisInit($1, filename); }  //displayAST($1, 0);
     ; 
 /* 外部变量定义列表：整个语法树 */
 ExtDefList: { $$ = NULL; }

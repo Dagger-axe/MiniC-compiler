@@ -22,7 +22,7 @@ char *newLabel() {
     char s[10];
     //itoa(no++, s, 10);
     sprintf(s, "%d", no++);
-    return strcat0("label", s);
+    return strcat0("label_", s);
 }
 
 char *newTemp() {
@@ -30,7 +30,7 @@ char *newTemp() {
     char s[10];
     //itoa(no++, s, 10);
     sprintf(s, "%d", no++);
-    return strcat0("temp", s);
+    return strcat0("temp_", s);
 }
 
 //生成一条TAC代码的结点组成的双向循环链表，返回头指针
@@ -110,7 +110,7 @@ void prnIR(struct codenode *head) {
         sprintf(resultstr, "%s", h->result.id);
         switch (h->op) {
         case ASSIGNOP:  
-            printf("  %s := %s\n", resultstr, opnstr1);
+            printf("  %s := %s offset:%d\n", resultstr, opnstr1, h->result.offset);
             break;
         case PLUS:
         case MINUS:
@@ -688,7 +688,7 @@ void semantic_Analysis(struct node *T) {
                     T->code = T->ptr[0]->code;
                 }
                 break;
-        case  PARAM_DEC:
+        case PARAM_DEC:
                 rtn = fillSymbolTable(T->ptr[1]->type_id, newAlias(), 1, T->ptr[0]->type, 'P', T->offset);
                 if (rtn == -1)
                     semantic_error(T->ptr[1]->position, T->ptr[1]->type_id, "参数名重复定义");
@@ -702,7 +702,7 @@ void semantic_Analysis(struct node *T) {
         case COMP_STM:
                 LEV++;
                 //设置层号加1，并且保存该层局部变量在符号表中的起始位置在symbol_scope_Stack
-                symbol_scope_Stack. ScopeArray [symbol_scope_Stack.top++] = symbolTable.index;
+                symbol_scope_Stack.ScopeArray[symbol_scope_Stack.top++] = symbolTable.index;
                 T->width = 0;
                 T->code = NULL;
                 if (T->ptr[0]) {
@@ -718,7 +718,7 @@ void semantic_Analysis(struct node *T) {
                     T->width += T->ptr[1]->width;
                     T->code = merge(2, T->code, T->ptr[1]->code);
                 }
-                prn_symbol();  //c在退出一个符合语句前显示的符号表
+//                prn_symbol();  //c在退出一个符合语句前显示的符号表
                 LEV--;  //出复合语句，层号减1
                 symbolTable.index = symbol_scope_Stack.ScopeArray[--symbol_scope_Stack.top];  //删除该作用域中的符号
                 break;
@@ -755,11 +755,11 @@ void semantic_Analysis(struct node *T) {
                     num = 0;
                     T0->offset = T->offset;
                     T->width = 0;
-                    while (T0) {  //处理所以DEC_LIST结点
+                    while (T0) {  //处理所有DEC_LIST结点
                         num++;
                         T0->ptr[0]->type = T0->type;  //类型属性向下传递
                         if (T0->ptr[1]) T0->ptr[1]->type = T0->type;
-                        T0->ptr[0]->offset = T0->offset;  //类型属性向下传递
+                        T0->ptr[0]->offset = T0->offset;  //offset属性向下传递
                         if (T0->ptr[1]) T0->ptr[1]->offset = T0->offset + width;
                         if (T0->ptr[0]->kind == ID){
                             rtn = fillSymbolTable(T0->ptr[0]->type_id, newAlias(), LEV, T0->ptr[0]->type, 'V', T->offset + T->width);//此处偏移量未计算，暂时为0
@@ -768,7 +768,7 @@ void semantic_Analysis(struct node *T) {
                             else T0->ptr[0]->place = rtn;
                             T->width += width;
                         }
-                        else if (T0->ptr[0]->kind == ASSIGNOP){
+                        else if (T0->ptr[0]->kind == ASSIGNOP){  // int a, b = 1; 此时分析 b = 1的过程
                             rtn = fillSymbolTable(T0->ptr[0]->ptr[0]->type_id, newAlias(), LEV, T0->ptr[0]->type, 'V', T->offset + T->width);//此处偏移量未计算，暂时为0
                             if (rtn == -1)
                                 semantic_error(T0->ptr[0]->ptr[0]->position, T0->ptr[0]->ptr[0]->type_id, "变量重复定义");
@@ -777,7 +777,10 @@ void semantic_Analysis(struct node *T) {
                                 T0->ptr[0]->ptr[1]->offset = T->offset + T->width + width;
                                 Exp(T0->ptr[0]->ptr[1]);
                                 opn1.kind = ID; strcpy(opn1.id, symbolTable.symbols[T0->ptr[0]->ptr[1]->place].alias);
+                                opn1.offset = symbolTable.symbols[T0->ptr[0]->ptr[1]->place].offset;  //指定 a = 1 中临时变量 1 在栈中位置，以完成赋值
                                 result.kind = ID; strcpy(result.id, symbolTable.symbols[T0->ptr[0]->place].alias);
+                                //支持int a, b = 1, c = read();的形式
+                                result.offset = symbolTable.symbols[rtn].offset;  //指定 a = 1 中变量 a 在栈中位置，以完成赋值
                                 T->code = merge(3, T->code, T0->ptr[0]->ptr[1]->code, genIR(ASSIGNOP, opn1, opn2, result));
                             }
                             T->width += width + T0->ptr[0]->ptr[1]->width;
@@ -1091,6 +1094,6 @@ void semantic_AnalysisInit(struct node *T, char *filename) {
     symbol_scope_Stack.top = 1;
     T->offset = 0;  //外部变量在数据区的偏移量
     semantic_Analysis(T);
-    prnIR(T->code);  //在终端显示中间代码
+    //prnIR(T->code);  //在终端显示中间代码
     objectCode(T->code, filename);  //生成目标代码
  } 

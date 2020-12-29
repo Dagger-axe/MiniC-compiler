@@ -1483,7 +1483,7 @@ yyreduce:
     {
         case 2:
 #line 59 "chopper.y" /* yacc.c:1646  */
-    { displayAST((yyvsp[0].ptr), 0);semantic_AnalysisInit((yyvsp[0].ptr), filename); }
+    { semantic_AnalysisInit((yyvsp[0].ptr), filename); }
 #line 1488 "chopper.tab.c" /* yacc.c:1646  */
     break;
 

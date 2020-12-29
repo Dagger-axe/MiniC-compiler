@@ -135,7 +135,7 @@ void displayAST(struct node *T, int indent){  //对抽象语法树的先根遍�
                     if(T0->ptr[0]->kind == ID)
                         printf("%*c %s\n", indent + 3, ' ', T0->ptr[0]->type_id);
                     else if(T0->ptr[0]->kind == ASSIGNOP){
-                        printf("%*c %s ASSIGNOP\n ", indent + 3, ' ', T0->ptr[0]->ptr[0]->type_id);
+                        printf("%*c %s ASSIGNOP\n ", indent + 3, ' ', T0->ptr[0]->ptr[0]->type_id);  //输出num = 1;的num
                         //显示初始化表达式
                         displayAST(T0->ptr[0]->ptr[1], indent + strlen(T0->ptr[0]->ptr[0]->type_id) + 4);       
                     }
