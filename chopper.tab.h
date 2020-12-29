@@ -87,7 +87,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 19 "chopper.y" /* yacc.c:1909  */
+#line 22 "chopper.y" /* yacc.c:1909  */
 
 	int type_int;
 	float type_float;

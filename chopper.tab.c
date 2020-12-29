@@ -64,20 +64,23 @@
 /* Copy the first part of user declarations.  */
 #line 4 "chopper.y" /* yacc.c:339  */
 
-    #include "stdio.h"
-    #include "math.h"
-    #include "string.h"
-    #include "def.h"
+    #include <stdio.h>
+    #include <math.h>
+    #include <string.h>
     #include <stdarg.h>
+    #include <unistd.h>
+    #include "def.h"
     extern int yylineno;
     extern char *yytext;
     extern FILE *yyin;
+    //用户定义输出文件
+    char filename[64];
     //消除warning的声明
     void yyerror(const char* fmt, ...);
     void displayAST(struct node *, int);   
     int yylex();
 
-#line 81 "chopper.tab.c" /* yacc.c:339  */
+#line 84 "chopper.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -154,7 +157,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 19 "chopper.y" /* yacc.c:355  */
+#line 22 "chopper.y" /* yacc.c:355  */
 
 	int type_int;
 	float type_float;
@@ -162,7 +165,7 @@ union YYSTYPE
     char type_char[4];
 	struct node *ptr;
 
-#line 166 "chopper.tab.c" /* yacc.c:355  */
+#line 169 "chopper.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -193,7 +196,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 197 "chopper.tab.c" /* yacc.c:358  */
+#line 200 "chopper.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -496,13 +499,13 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    52,    52,    55,    56,    59,    60,    61,    63,    66,
-      67,    70,    73,    74,    76,    77,    79,    82,    85,    86,
-      88,    89,    90,    91,    92,    93,    94,    95,    97,    98,
-      99,   101,   103,   104,   106,   107,   109,   110,   111,   112,
-     113,   114,   115,   116,   117,   118,   119,   120,   121,   122,
-     123,   124,   125,   126,   127,   128,   129,   130,   131,   132,
-     133,   135,   136
+       0,    59,    59,    62,    63,    66,    67,    68,    70,    73,
+      74,    77,    80,    81,    83,    84,    86,    89,    92,    93,
+      95,    96,    97,    98,    99,   100,   101,   102,   104,   105,
+     106,   108,   110,   111,   113,   114,   116,   117,   118,   119,
+     120,   121,   122,   123,   124,   125,   126,   127,   128,   129,
+     130,   131,   132,   133,   134,   135,   136,   137,   138,   139,
+     140,   142,   143
 };
 #endif
 
@@ -534,10 +537,10 @@ static const yytype_uint16 yytoknum[] =
 };
 # endif
 
-#define YYPACT_NINF -94
+#define YYPACT_NINF -83
 
 #define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-94)))
+  (!!((Yystate) == (-83)))
 
 #define YYTABLE_NINF -29
 
@@ -548,18 +551,18 @@ static const yytype_uint16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int16 yypact[] =
 {
-       5,    10,   -94,    14,   -94,     5,    24,   -94,   -94,   -94,
-      20,    17,    19,    27,     2,   -94,    35,    47,   -94,   -94,
-      35,    21,    38,   -94,   -94,    36,    35,    79,    47,   -94,
-     -94,    51,   -94,    45,    58,    59,   -94,    63,   -94,   -94,
-     133,   133,   133,   133,   133,    65,    68,   133,    71,    72,
-     -94,    77,    79,   149,   -94,   -94,   133,   -94,    35,   111,
-     172,     1,     1,     1,     1,   133,   133,   195,   -94,   -94,
-     -94,   -94,   133,   -94,   133,   133,   133,   133,   -94,   -94,
-     133,   133,   133,   133,   133,   133,   133,   287,   -94,   -94,
-     218,    81,   -94,   241,   264,   -94,    41,   287,   287,   287,
-     287,     1,     1,     1,     1,   287,    41,    41,   133,   -94,
-      79,    79,   -94,    62,   -94,    79,   -94
+       5,     1,   -83,    20,   -83,     5,    19,   -83,   -83,   -83,
+      29,    26,    35,    46,     2,   -83,    48,    47,   -83,   -83,
+      48,    60,    57,   -83,   -83,    59,    48,    79,    47,   -83,
+     -83,    67,   -83,    49,    71,    75,   -83,    76,   -83,   -83,
+     133,   133,   133,   133,   133,    88,    91,   133,    89,    90,
+     -83,    92,    79,   149,   -83,   -83,   133,   -83,    48,   111,
+     172,    11,    11,    11,    11,   133,   133,   195,   -83,   -83,
+     -83,   -83,   133,   -83,   133,   133,   133,   133,   -83,   -83,
+     133,   133,   133,   133,   133,   133,   133,   287,   -83,   -83,
+     218,    95,   -83,   241,   264,   -83,    41,   287,   287,   287,
+     287,    -2,    -2,    11,    11,   287,    72,   124,   133,   -83,
+      79,    79,   -83,    86,   -83,    79,   -83
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -584,8 +587,8 @@ static const yytype_uint8 yydefact[] =
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -94,   -94,    88,   -94,    -4,    78,   -11,   -94,    64,   -94,
-      83,    48,   -93,    69,   -94,    44,   -94,   -40,    -5
+     -83,   -83,   101,   -83,    -4,    93,   -11,   -83,    94,   -83,
+     104,    70,   -82,    96,   -83,    65,   -83,   -40,    18
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
@@ -601,21 +604,21 @@ static const yytype_int8 yydefgoto[] =
 static const yytype_int8 yytable[] =
 {
       60,    61,    62,    63,    64,    -3,     1,    67,     2,    29,
-      20,     2,    19,    26,     8,    33,    87,   113,   114,    90,
-      78,    79,   116,     7,    26,    93,    94,    20,    10,    14,
-      15,    30,    96,    16,    97,    98,    99,   100,    17,    23,
-     101,   102,   103,   104,   105,   106,   107,    33,    25,    32,
-     -28,   -28,    31,     2,   -28,   -28,   -28,     2,   -28,   -28,
+      20,     2,    19,    26,     7,    33,    87,    78,    79,    90,
+       8,    82,    83,    10,    26,    93,    94,    20,   113,   114,
+      78,    79,    96,   116,    97,    98,    99,   100,    14,    15,
+     101,   102,   103,   104,   105,   106,   107,    33,    25,    16,
+     -28,   -28,    23,     2,   -28,   -28,   -28,    17,   -28,   -28,
       78,    79,    80,    81,    82,    83,   -28,   -28,    90,   -28,
-      56,    57,    59,    58,    65,   -28,   -28,    66,   -28,   -28,
-     -28,   -28,    36,    37,    68,    69,    38,    39,    40,    70,
-      17,   109,   115,     9,    24,    55,    18,    54,    41,    42,
-      71,    43,    88,   112,     0,     0,     0,    44,    45,     0,
-      46,    47,    48,    49,    36,    37,     0,     0,    38,    39,
-      40,    89,     0,     0,     0,     0,     0,     0,     0,     0,
+      30,    31,    32,     2,    56,   -28,   -28,    72,   -28,   -28,
+     -28,   -28,    36,    37,    57,    59,    38,    39,    40,    58,
+      17,    78,    79,    80,    81,    82,    83,    65,    41,    42,
+      66,    43,    68,    69,    70,   109,     9,    44,    45,    24,
+      46,    47,    48,    49,    36,    37,   115,    18,    38,    39,
+      40,    89,    71,    88,    54,    55,   112,     0,     0,    72,
       41,    42,     0,    43,     0,     0,    36,    37,     0,    44,
-      38,    39,    40,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,    41,    42,    72,    43,     0,     0,     0,     0,
+      38,    39,    40,    78,    79,    80,    81,    82,    83,     0,
+      85,     0,    41,    42,    72,    43,     0,     0,     0,     0,
        0,    44,    73,     0,    74,    75,    76,    77,    78,    79,
       80,    81,    82,    83,    84,    85,    86,    72,     0,     0,
        0,     0,    92,     0,     0,     0,     0,    74,    75,    76,
@@ -637,21 +640,21 @@ static const yytype_int8 yytable[] =
 static const yytype_int8 yycheck[] =
 {
       40,    41,    42,    43,    44,     0,     1,    47,     6,    20,
-      14,     6,    10,    17,     0,    26,    56,   110,   111,    59,
-      19,    20,   115,    13,    28,    65,    66,    31,     4,     9,
-      13,    10,    72,    14,    74,    75,    76,    77,    11,     4,
-      80,    81,    82,    83,    84,    85,    86,    58,     1,    13,
-       3,     4,    14,     6,     7,     8,     9,     6,    11,    12,
+      14,     6,    10,    17,    13,    26,    56,    19,    20,    59,
+       0,    23,    24,     4,    28,    65,    66,    31,   110,   111,
+      19,    20,    72,   115,    74,    75,    76,    77,     9,    13,
+      80,    81,    82,    83,    84,    85,    86,    58,     1,    14,
+       3,     4,     4,     6,     7,     8,     9,    11,    11,    12,
       19,    20,    21,    22,    23,    24,    19,    20,   108,    22,
-      25,    13,     9,    14,     9,    28,    29,     9,    31,    32,
-      33,    34,     3,     4,    13,    13,     7,     8,     9,    12,
-      11,    10,    30,     5,    16,    31,    13,    28,    19,    20,
-      52,    22,    58,   108,    -1,    -1,    -1,    28,    29,    -1,
-      31,    32,    33,    34,     3,     4,    -1,    -1,     7,     8,
-       9,    10,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      10,    14,    13,     6,    25,    28,    29,     5,    31,    32,
+      33,    34,     3,     4,    13,     9,     7,     8,     9,    14,
+      11,    19,    20,    21,    22,    23,    24,     9,    19,    20,
+       9,    22,    13,    13,    12,    10,     5,    28,    29,    16,
+      31,    32,    33,    34,     3,     4,    30,    13,     7,     8,
+       9,    10,    52,    58,    28,    31,   108,    -1,    -1,     5,
       19,    20,    -1,    22,    -1,    -1,     3,     4,    -1,    28,
-       7,     8,     9,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    19,    20,     5,    22,    -1,    -1,    -1,    -1,
+       7,     8,     9,    19,    20,    21,    22,    23,    24,    -1,
+      26,    -1,    19,    20,     5,    22,    -1,    -1,    -1,    -1,
       -1,    28,    13,    -1,    15,    16,    17,    18,    19,    20,
       21,    22,    23,    24,    25,    26,    27,     5,    -1,    -1,
       -1,    -1,    10,    -1,    -1,    -1,    -1,    15,    16,    17,
@@ -1479,373 +1482,373 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 52 "chopper.y" /* yacc.c:1646  */
-    { semantic_AnalysisInit((yyvsp[0].ptr)); }
-#line 1485 "chopper.tab.c" /* yacc.c:1646  */
+#line 59 "chopper.y" /* yacc.c:1646  */
+    { displayAST((yyvsp[0].ptr), 0);semantic_AnalysisInit((yyvsp[0].ptr), filename); }
+#line 1488 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 55 "chopper.y" /* yacc.c:1646  */
+#line 62 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = NULL; }
-#line 1491 "chopper.tab.c" /* yacc.c:1646  */
+#line 1494 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 56 "chopper.y" /* yacc.c:1646  */
+#line 63 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(EXT_DEF_LIST, (yyvsp[-1].ptr), (yyvsp[0].ptr), NULL, yylineno); }
-#line 1497 "chopper.tab.c" /* yacc.c:1646  */
+#line 1500 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 59 "chopper.y" /* yacc.c:1646  */
+#line 66 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(EXT_VAR_DEF, (yyvsp[-2].ptr), (yyvsp[-1].ptr), NULL, yylineno); }
-#line 1503 "chopper.tab.c" /* yacc.c:1646  */
+#line 1506 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 60 "chopper.y" /* yacc.c:1646  */
+#line 67 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(FUNC_DEF, (yyvsp[-2].ptr), (yyvsp[-1].ptr), (yyvsp[0].ptr), yylineno); }
-#line 1509 "chopper.tab.c" /* yacc.c:1646  */
+#line 1512 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 61 "chopper.y" /* yacc.c:1646  */
+#line 68 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = NULL; }
-#line 1515 "chopper.tab.c" /* yacc.c:1646  */
+#line 1518 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 63 "chopper.y" /* yacc.c:1646  */
+#line 70 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(TYPE, NULL, NULL, NULL, yylineno); strcpy((yyval.ptr)->type_id, (yyvsp[0].type_id)); if(!strcmp((yyvsp[0].type_id),"int"))(yyval.ptr)->type = INT; if(!strcmp((yyvsp[0].type_id),"float"))(yyval.ptr)->type = FLOAT; if(!strcmp((yyvsp[0].type_id),"char"))(yyval.ptr)->type = CHAR; }
-#line 1521 "chopper.tab.c" /* yacc.c:1646  */
+#line 1524 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 66 "chopper.y" /* yacc.c:1646  */
+#line 73 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = (yyvsp[0].ptr); }
-#line 1527 "chopper.tab.c" /* yacc.c:1646  */
+#line 1530 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 67 "chopper.y" /* yacc.c:1646  */
+#line 74 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(EXT_DEC_LIST, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); }
-#line 1533 "chopper.tab.c" /* yacc.c:1646  */
+#line 1536 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 70 "chopper.y" /* yacc.c:1646  */
+#line 77 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(ID, NULL, NULL, NULL, yylineno); strcpy((yyval.ptr)->type_id, (yyvsp[0].type_id)); }
-#line 1539 "chopper.tab.c" /* yacc.c:1646  */
+#line 1542 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 73 "chopper.y" /* yacc.c:1646  */
+#line 80 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(FUNC_DEC, (yyvsp[-1].ptr), NULL, NULL, yylineno); strcpy((yyval.ptr)->type_id, (yyvsp[-3].type_id)); }
-#line 1545 "chopper.tab.c" /* yacc.c:1646  */
+#line 1548 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 74 "chopper.y" /* yacc.c:1646  */
+#line 81 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(FUNC_DEC, NULL, NULL, NULL, yylineno); strcpy((yyval.ptr)->type_id, (yyvsp[-2].type_id)); }
-#line 1551 "chopper.tab.c" /* yacc.c:1646  */
+#line 1554 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 76 "chopper.y" /* yacc.c:1646  */
+#line 83 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(PARAM_LIST, (yyvsp[0].ptr), NULL, NULL, yylineno); }
-#line 1557 "chopper.tab.c" /* yacc.c:1646  */
+#line 1560 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 77 "chopper.y" /* yacc.c:1646  */
+#line 84 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(PARAM_LIST, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); }
-#line 1563 "chopper.tab.c" /* yacc.c:1646  */
+#line 1566 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 79 "chopper.y" /* yacc.c:1646  */
+#line 86 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(PARAM_DEC, (yyvsp[-1].ptr), (yyvsp[0].ptr), NULL, yylineno); }
-#line 1569 "chopper.tab.c" /* yacc.c:1646  */
+#line 1572 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 82 "chopper.y" /* yacc.c:1646  */
+#line 89 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(COMP_STM, (yyvsp[-2].ptr), (yyvsp[-1].ptr), NULL, yylineno); }
-#line 1575 "chopper.tab.c" /* yacc.c:1646  */
+#line 1578 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 85 "chopper.y" /* yacc.c:1646  */
+#line 92 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = NULL; }
-#line 1581 "chopper.tab.c" /* yacc.c:1646  */
+#line 1584 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 86 "chopper.y" /* yacc.c:1646  */
+#line 93 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(STM_LIST, (yyvsp[-1].ptr), (yyvsp[0].ptr), NULL, yylineno); }
-#line 1587 "chopper.tab.c" /* yacc.c:1646  */
+#line 1590 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 88 "chopper.y" /* yacc.c:1646  */
+#line 95 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(EXP_STMT, (yyvsp[-1].ptr), NULL, NULL, yylineno); }
-#line 1593 "chopper.tab.c" /* yacc.c:1646  */
+#line 1596 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 89 "chopper.y" /* yacc.c:1646  */
+#line 96 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = (yyvsp[0].ptr); }
-#line 1599 "chopper.tab.c" /* yacc.c:1646  */
+#line 1602 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 90 "chopper.y" /* yacc.c:1646  */
+#line 97 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(RETURN, (yyvsp[-1].ptr), NULL, NULL, yylineno); }
-#line 1605 "chopper.tab.c" /* yacc.c:1646  */
+#line 1608 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 91 "chopper.y" /* yacc.c:1646  */
+#line 98 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(IF_THEN, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); }
-#line 1611 "chopper.tab.c" /* yacc.c:1646  */
+#line 1614 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 92 "chopper.y" /* yacc.c:1646  */
+#line 99 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(IF_THEN_ELSE, (yyvsp[-4].ptr), (yyvsp[-2].ptr), (yyvsp[0].ptr), yylineno); }
-#line 1617 "chopper.tab.c" /* yacc.c:1646  */
+#line 1620 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 93 "chopper.y" /* yacc.c:1646  */
+#line 100 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(WHILE, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); }
-#line 1623 "chopper.tab.c" /* yacc.c:1646  */
+#line 1626 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 94 "chopper.y" /* yacc.c:1646  */
+#line 101 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(BREAK, NULL, NULL, NULL, yylineno); }
-#line 1629 "chopper.tab.c" /* yacc.c:1646  */
+#line 1632 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 95 "chopper.y" /* yacc.c:1646  */
+#line 102 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(CONTINUE, NULL, NULL, NULL, yylineno); }
-#line 1635 "chopper.tab.c" /* yacc.c:1646  */
+#line 1638 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 97 "chopper.y" /* yacc.c:1646  */
+#line 104 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = NULL; }
-#line 1641 "chopper.tab.c" /* yacc.c:1646  */
+#line 1644 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 98 "chopper.y" /* yacc.c:1646  */
+#line 105 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(DEF_LIST, (yyvsp[-1].ptr), (yyvsp[0].ptr), NULL, yylineno); }
-#line 1647 "chopper.tab.c" /* yacc.c:1646  */
+#line 1650 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 99 "chopper.y" /* yacc.c:1646  */
+#line 106 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = NULL; }
-#line 1653 "chopper.tab.c" /* yacc.c:1646  */
+#line 1656 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 101 "chopper.y" /* yacc.c:1646  */
+#line 108 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(VAR_DEF, (yyvsp[-2].ptr), (yyvsp[-1].ptr), NULL, yylineno); }
-#line 1659 "chopper.tab.c" /* yacc.c:1646  */
+#line 1662 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 103 "chopper.y" /* yacc.c:1646  */
+#line 110 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(DEC_LIST, (yyvsp[0].ptr), NULL, NULL, yylineno); }
-#line 1665 "chopper.tab.c" /* yacc.c:1646  */
+#line 1668 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 104 "chopper.y" /* yacc.c:1646  */
+#line 111 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(DEC_LIST, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); }
-#line 1671 "chopper.tab.c" /* yacc.c:1646  */
+#line 1674 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 106 "chopper.y" /* yacc.c:1646  */
+#line 113 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = (yyvsp[0].ptr); }
-#line 1677 "chopper.tab.c" /* yacc.c:1646  */
+#line 1680 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 107 "chopper.y" /* yacc.c:1646  */
+#line 114 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(ASSIGNOP, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); strcpy((yyval.ptr)->type_id, "ASSIGNOP"); }
-#line 1683 "chopper.tab.c" /* yacc.c:1646  */
+#line 1686 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 109 "chopper.y" /* yacc.c:1646  */
+#line 116 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(ASSIGNOP, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); strcpy((yyval.ptr)->type_id, "ASSIGNOP"); }
-#line 1689 "chopper.tab.c" /* yacc.c:1646  */
+#line 1692 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 110 "chopper.y" /* yacc.c:1646  */
+#line 117 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(AND, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); strcpy((yyval.ptr)->type_id, "AND"); }
-#line 1695 "chopper.tab.c" /* yacc.c:1646  */
+#line 1698 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 111 "chopper.y" /* yacc.c:1646  */
+#line 118 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(OR, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); strcpy((yyval.ptr)->type_id, "OR"); }
-#line 1701 "chopper.tab.c" /* yacc.c:1646  */
+#line 1704 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 112 "chopper.y" /* yacc.c:1646  */
+#line 119 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(RELOP, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); strcpy( (yyval.ptr)->type_id, (yyvsp[-1].type_id)); }
-#line 1707 "chopper.tab.c" /* yacc.c:1646  */
+#line 1710 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 113 "chopper.y" /* yacc.c:1646  */
+#line 120 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(PLUS, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); strcpy((yyval.ptr)->type_id, "PLUS"); }
-#line 1713 "chopper.tab.c" /* yacc.c:1646  */
+#line 1716 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 114 "chopper.y" /* yacc.c:1646  */
+#line 121 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(MINUS, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); strcpy((yyval.ptr)->type_id, "MINUS"); }
-#line 1719 "chopper.tab.c" /* yacc.c:1646  */
+#line 1722 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 115 "chopper.y" /* yacc.c:1646  */
+#line 122 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(STAR, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); strcpy((yyval.ptr)->type_id, "STAR"); }
-#line 1725 "chopper.tab.c" /* yacc.c:1646  */
+#line 1728 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 116 "chopper.y" /* yacc.c:1646  */
+#line 123 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(DIV, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); strcpy((yyval.ptr)->type_id, "DIV"); }
-#line 1731 "chopper.tab.c" /* yacc.c:1646  */
+#line 1734 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 117 "chopper.y" /* yacc.c:1646  */
+#line 124 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(PLUSOP, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); strcpy((yyval.ptr)->type_id, "PLUSOP"); }
-#line 1737 "chopper.tab.c" /* yacc.c:1646  */
+#line 1740 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 118 "chopper.y" /* yacc.c:1646  */
+#line 125 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(MINUSOP, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); strcpy((yyval.ptr)->type_id, "MINUSOP"); }
-#line 1743 "chopper.tab.c" /* yacc.c:1646  */
+#line 1746 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 119 "chopper.y" /* yacc.c:1646  */
+#line 126 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(STAROP, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); strcpy((yyval.ptr)->type_id, "STAROP"); }
-#line 1749 "chopper.tab.c" /* yacc.c:1646  */
+#line 1752 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 120 "chopper.y" /* yacc.c:1646  */
+#line 127 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(DIVOP, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); strcpy((yyval.ptr)->type_id, "DIVOP"); }
-#line 1755 "chopper.tab.c" /* yacc.c:1646  */
+#line 1758 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 121 "chopper.y" /* yacc.c:1646  */
+#line 128 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(INC, (yyvsp[0].ptr), NULL, NULL, yylineno); strcpy((yyval.ptr)->type_id, "INC"); }
-#line 1761 "chopper.tab.c" /* yacc.c:1646  */
+#line 1764 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 122 "chopper.y" /* yacc.c:1646  */
+#line 129 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(INC, (yyvsp[-1].ptr), NULL, NULL, yylineno); strcpy((yyval.ptr)->type_id, "INC"); }
-#line 1767 "chopper.tab.c" /* yacc.c:1646  */
+#line 1770 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 123 "chopper.y" /* yacc.c:1646  */
+#line 130 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(DEC, (yyvsp[0].ptr), NULL, NULL, yylineno); strcpy((yyval.ptr)->type_id, "DEC"); }
-#line 1773 "chopper.tab.c" /* yacc.c:1646  */
+#line 1776 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 124 "chopper.y" /* yacc.c:1646  */
+#line 131 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(DEC, (yyvsp[-1].ptr), NULL, NULL, yylineno); strcpy((yyval.ptr)->type_id, "DEC"); }
-#line 1779 "chopper.tab.c" /* yacc.c:1646  */
+#line 1782 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 125 "chopper.y" /* yacc.c:1646  */
+#line 132 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = (yyvsp[-1].ptr); }
-#line 1785 "chopper.tab.c" /* yacc.c:1646  */
+#line 1788 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 126 "chopper.y" /* yacc.c:1646  */
+#line 133 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(UMINUS, (yyvsp[0].ptr), NULL, NULL, yylineno); strcpy((yyval.ptr)->type_id, "UMINUS"); }
-#line 1791 "chopper.tab.c" /* yacc.c:1646  */
+#line 1794 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 127 "chopper.y" /* yacc.c:1646  */
+#line 134 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(NOT, (yyvsp[0].ptr), NULL, NULL, yylineno); strcpy((yyval.ptr)->type_id, "NOT"); }
-#line 1797 "chopper.tab.c" /* yacc.c:1646  */
+#line 1800 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 128 "chopper.y" /* yacc.c:1646  */
+#line 135 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(FUNC_CALL, (yyvsp[-1].ptr), NULL, NULL, yylineno); strcpy((yyval.ptr)->type_id, (yyvsp[-3].type_id)); }
-#line 1803 "chopper.tab.c" /* yacc.c:1646  */
+#line 1806 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 129 "chopper.y" /* yacc.c:1646  */
+#line 136 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(FUNC_CALL, NULL, NULL, NULL, yylineno); strcpy((yyval.ptr)->type_id, (yyvsp[-2].type_id)); }
-#line 1809 "chopper.tab.c" /* yacc.c:1646  */
+#line 1812 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 130 "chopper.y" /* yacc.c:1646  */
+#line 137 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(ID, NULL, NULL, NULL, yylineno); strcpy((yyval.ptr)->type_id, (yyvsp[0].type_id)); }
-#line 1815 "chopper.tab.c" /* yacc.c:1646  */
+#line 1818 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 131 "chopper.y" /* yacc.c:1646  */
+#line 138 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(INT, NULL, NULL, NULL, yylineno); (yyval.ptr)->type_int = (yyvsp[0].type_int); (yyval.ptr)->type = INT; }
-#line 1821 "chopper.tab.c" /* yacc.c:1646  */
+#line 1824 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 59:
-#line 132 "chopper.y" /* yacc.c:1646  */
+#line 139 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(FLOAT, NULL, NULL, NULL, yylineno); (yyval.ptr)->type_float = (yyvsp[0].type_float); (yyval.ptr)->type = FLOAT; }
-#line 1827 "chopper.tab.c" /* yacc.c:1646  */
+#line 1830 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 133 "chopper.y" /* yacc.c:1646  */
+#line 140 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(CHAR, NULL, NULL, NULL, yylineno); strcpy((yyval.ptr)->type_char, (yyvsp[0].type_char)); (yyval.ptr)->type = CHAR; }
-#line 1833 "chopper.tab.c" /* yacc.c:1646  */
+#line 1836 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 61:
-#line 135 "chopper.y" /* yacc.c:1646  */
+#line 142 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(ARGS, (yyvsp[-2].ptr), (yyvsp[0].ptr), NULL, yylineno); }
-#line 1839 "chopper.tab.c" /* yacc.c:1646  */
+#line 1842 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
   case 62:
-#line 136 "chopper.y" /* yacc.c:1646  */
+#line 143 "chopper.y" /* yacc.c:1646  */
     { (yyval.ptr) = mknode(ARGS, (yyvsp[0].ptr), NULL, NULL, yylineno); }
-#line 1845 "chopper.tab.c" /* yacc.c:1646  */
+#line 1848 "chopper.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1849 "chopper.tab.c" /* yacc.c:1646  */
+#line 1852 "chopper.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2080,10 +2083,48 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 139 "chopper.y" /* yacc.c:1906  */
+#line 146 "chopper.y" /* yacc.c:1906  */
 
+
+void print_help() {
+    printf("Usage:\t  ./chopper [-h] <file-name> [object-file-path]\n\n");
+    printf("-h\t\t    Shows this usage instructions\n");
+    printf("file-name\t    The name of the file to compile\n");
+    printf("object-file-path    The file name and path of the target file\n");
+}
 
 int main(int argc, char *argv[]){
+    if (argc != 2 && argc != 3) {
+        printf("[ERROR]***Invalid arguments provided. Use -h for help.\n");
+        return 0;
+    }
+    if (argc == 2 && !strcmp(argv[1], "-h")) {
+        print_help();
+        return 0;
+    }
+    /* 测试指定文件是否存在、是否可读 */
+    int ret = access(argv[1], F_OK);
+    if (ret == -1) {
+        printf("[ERROR]***No such initial file.\n");
+        return 0;
+    } else {
+        ret = access(argv[1], R_OK);
+        if (ret == -1) {
+            printf("[ERROR]***The initial file can\'t be read.\n");
+            return 0;
+        }
+    }
+    /* 当用户指定输出文件时，判断该路径是否存在 */
+    if (argc == 3) {
+        FILE *po = fopen(argv[2], "wb");
+        if (!po) {
+            printf("[ERROR]***The object path is wrong.\n");
+            fclose(po);
+            return 0;
+        } else strcpy(filename, argv[2]);
+        fclose(po);
+    } else strcpy(filename, "objectfile.s");
+
 	yyin = fopen(argv[1], "r");
 	if(!yyin) return 0;
 	yylineno = 1;

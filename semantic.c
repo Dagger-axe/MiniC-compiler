@@ -193,9 +193,12 @@ void prn_symbol() {  //显示符号表
 }
 
 int searchSymbolTable(char *name) {
-    int i;
-    for(i = symbolTable.index - 1; i >= 0; i--)
-        if (!strcmp(symbolTable.symbols[i].name, name)) return i;
+    int i, is_func = 0;
+    for(i = symbolTable.index - 1; i >= 0; i--) {
+        if (symbolTable.symbols[i].level==0) is_func = 1;
+        if (is_func && symbolTable.symbols[i].level == 1) continue;  //跳过参数
+        if (!strcmp(symbolTable.symbols[i].name, name))  return i;
+    }
     return -1;
 }
 
@@ -255,25 +258,26 @@ void ext_var_list(struct node *T) {  //处理变量列表
     }
 }
 
-int  match_param(int i, struct node *T) {
+int match_param(int i, struct node *T) {
     int j, num = symbolTable.symbols[i].paramnum;
-    int type1, type2;
+    int type1, type2, position = T->position;
+    T = T->ptr[0];
     if (num == 0 && T == NULL) return 1;
-    for (j = 1;j <= num;j++) {
-        if (!T){
-            semantic_error(T->position, "", "函数调用参数太少");
+    for (j = 1; j <= num; j++) {
+        if (!T) {
+            semantic_error(position, "", "函数调用参数太少");
             return 0;
         }
         type1 = symbolTable.symbols[i + j].type;  //形参类型
         type2 = T->ptr[0]->type;
         if (type1 != type2) {
-            semantic_error(T->position, "", "参数类型不匹配");
+            semantic_error(position, "", "参数类型不匹配");
             return 0;
         }
         T = T->ptr[1];
     }
     if (T) {  //num个参数已经匹配完，还有实参表达式
-        semantic_error(T->position, "", "函数调用参数太多");
+        semantic_error(position, "", "函数调用参数太多");
         return 0;
     }
     return 1;
@@ -306,14 +310,23 @@ void boolExp(struct node *T) {  //布尔表达式，参考文献[1]p84的思想
                         semantic_error(T->position, T->type_id, "变量未定义");
                     if (symbolTable.symbols[rtn].flag == 'F')
                         semantic_error(T->position, T->type_id, "是函数名，类型不匹配");
-                    else {  //要求支持 int a = 1; 的情况
+                    else {
+                        int temprtn = fill_Temp(newTemp(), LEV, T->type, 'T', T->offset);
+                        opn1.kind = INT; opn1.const_int = 0;
+                        result.kind = ID; strcpy(result.id, symbolTable.symbols[temprtn].alias);
+                        result.offset = symbolTable.symbols[temprtn].offset + T->width;
+                        T->code = genIR(ASSIGNOP, opn1, opn2, result);
+                        T->width += 4;
+
                         opn1.kind = ID; strcpy(opn1.id, symbolTable.symbols[rtn].alias);
                         opn1.offset = symbolTable.symbols[rtn].offset;
-                        opn2.kind = INT; opn2.const_int = 0;
+                        opn2.kind = ID; strcpy(opn2.id, symbolTable.symbols[temprtn].alias);
+                        opn2.offset = symbolTable.symbols[temprtn].offset;
 
                         result.kind = ID; strcpy(result.id, T->Etrue);
-                        T->code = genIR(NEQ, opn1, opn2, result);
-                        T->code = merge(2, T->code, genGoto(T->Efalse));
+                        op = NEQ;
+                        T->code = merge(3, T->code, genIR(op, opn1, opn2, result), genGoto(T->Snext));
+                        break;
                     }
                     T->width = 0;
                     break;
@@ -558,7 +571,7 @@ void Exp(struct node *T) {  //处理基本表达式，参考文献[1]p82的思�
                     T->code = T->ptr[0]->code;
                 }
                 else {T->width = width; T->code = NULL;}
-                match_param(rtn, T->ptr[0]);   //处理所以参数的匹配
+                match_param(rtn, T);   //处理所以参数的匹配
                 //处理参数列表的中间代码
                 T0 = T->ptr[0];
                 while (T0) {
@@ -592,7 +605,7 @@ void Exp(struct node *T) {  //处理基本表达式，参考文献[1]p82的思�
 
 void semantic_Analysis(struct node *T) {
 //对抽象语法树的先根遍历, 按displayAST的控制结构修改完成符号表管理和语义检查、TAC生成（语句部分）
-    int rtn, num, width;
+    int rtn, num, width, paranum;
     struct node *T0;
     struct operandStruct opn1, opn2, result;
     if (T) {
@@ -705,7 +718,7 @@ void semantic_Analysis(struct node *T) {
                     T->width += T->ptr[1]->width;
                     T->code = merge(2, T->code, T->ptr[1]->code);
                 }
-//                prn_symbol();  //c在退出一个符合语句前显示的符号表
+                prn_symbol();  //c在退出一个符合语句前显示的符号表
                 LEV--;  //出复合语句，层号减1
                 symbolTable.index = symbol_scope_Stack.ScopeArray[--symbol_scope_Stack.top];  //删除该作用域中的符号
                 break;
@@ -723,16 +736,25 @@ void semantic_Analysis(struct node *T) {
                     T->code = merge(2, T->code, T->ptr[1]->code);
                     T->width += T->ptr[1]->width;
                 }
-                    break;
+                break;
         case VAR_DEF://处理一个局部变量定义, 将第一个孩子(TYPE结点)中的类型送到第二个孩子的类型域
                     //类似于上面的外部变量EXT_VAR_DEF，换了一种处理方法
                     T->code = NULL;
-                    T->ptr[1]->type = !strcmp(T->ptr[0]->type_id, "int")?INT:FLOAT;  //确定变量序列各变量类型
+                    //确定变量序列各变量类型
+                    if (!strcmp(T->ptr[0]->type_id, "int")) {
+                        T->ptr[1]->type = INT;
+                        width = 4;
+                    } else if (!strcmp(T->ptr[0]->type_id, "float")) {
+                        T->ptr[1]->type = FLOAT;
+                        width = 8;
+                    } else if (!strcmp(T->ptr[0]->type_id, "char")) {
+                        T->ptr[1]->type = CHAR;
+                        width = 1;
+                    }
                     T0 = T->ptr[1];  //T0为变量名列表子树根指针，对ID、ASSIGNOP类结点在登记到符号表，作为局部变量
                     num = 0;
                     T0->offset = T->offset;
                     T->width = 0;
-                    width = T->ptr[1]->type == INT?4:8;  //一个变量宽度
                     while (T0) {  //处理所以DEC_LIST结点
                         num++;
                         T0->ptr[0]->type = T0->type;  //类型属性向下传递
@@ -795,7 +817,7 @@ void semantic_Analysis(struct node *T) {
                     T->width = T->ptr[0]->width;
                     strcpy(T->ptr[1]->Snext, T->Snext);
                     semantic_Analysis(T->ptr[1]);  //if子句
-                    if (T->width<T->ptr[1]->width) T->width = T->ptr[1]->width;
+                    if (T->width < T->ptr[1]->width) T->width = T->ptr[1]->width;
                     T->code = merge(3, T->ptr[0]->code, genLabel(T->ptr[0]->Etrue), T->ptr[1]->code);
                     break;  //控制语句都还没有处理offset和width属性
         case IF_THEN_ELSE:
@@ -809,7 +831,7 @@ void semantic_Analysis(struct node *T) {
                     if (T->width<T->ptr[1]->width) T->width = T->ptr[1]->width;
                     strcpy(T->ptr[2]->Snext, T->Snext);
                     semantic_Analysis(T->ptr[2]);  //else子句
-                    if (T->width<T->ptr[2]->width) T->width = T->ptr[2]->width;
+                    if (T->width < T->ptr[2]->width) T->width = T->ptr[2]->width;
                     T->code = merge(6, T->ptr[0]->code, genLabel(T->ptr[0]->Etrue), T->ptr[1]->code, \
                                 genGoto(T->Snext), genLabel(T->ptr[0]->Efalse), T->ptr[2]->code);
                     break;
@@ -895,10 +917,10 @@ void semantic_Analysis(struct node *T) {
     }
 }
 
-void objectCode(struct codenode *head) {  //目标代码生成    
-    FILE *pfile = fopen("objectfile.s", "wb");   
+void objectCode(struct codenode *head, char *filename) {  //目标代码生成    
+    FILE *pfile = fopen(filename, "wb");   
     if (!pfile) {
-        printf("Fail to open object file.\n");
+        printf("[ERROR]***Fail to open object file.\n");
         return;
     }
     char opnstr1[32], opnstr2[32], resultstr[32];
@@ -913,69 +935,69 @@ void objectCode(struct codenode *head) {  //目标代码生成
 	// .text
 	fprintf(pfile, ".text\n");
 	fprintf(pfile, "read:\n");
-	fprintf(pfile, "  li $v0, 4\n");
-	fprintf(pfile, "  la $a0, input_info\n");
-	fprintf(pfile, "  syscall\n");
-	fprintf(pfile, "  li $v0, 5\n");
-	fprintf(pfile, "  syscall\n");
-	fprintf(pfile, "  jr $ra\n");
+	fprintf(pfile, "    li $v0, 4\n");
+	fprintf(pfile, "    la $a0, input_info\n");
+	fprintf(pfile, "    syscall\n");
+	fprintf(pfile, "    li $v0, 5\n");
+	fprintf(pfile, "    syscall\n");
+	fprintf(pfile, "    jr $ra\n");
 	fprintf(pfile, "write:\n");
-	fprintf(pfile, "  li $v0, 1\n");
-	fprintf(pfile, "  syscall\n");
-	fprintf(pfile, "  li $v0, 4\n");
-	fprintf(pfile, "  la $a0, ret_info\n");
-	fprintf(pfile, "  syscall\n");
-	fprintf(pfile, "  move $v0, $0\n");
-	fprintf(pfile, "  jr $ra\n");
+	fprintf(pfile, "    li $v0, 1\n");
+	fprintf(pfile, "    syscall\n");
+	fprintf(pfile, "    li $v0, 4\n");
+	fprintf(pfile, "    la $a0, ret_info\n");
+	fprintf(pfile, "    syscall\n");
+	fprintf(pfile, "    move $v0, $0\n");
+	fprintf(pfile, "    jr $ra\n");
 	// op: $t1, $t2   res: $t3
     do {
         switch (h->op) {
         case ASSIGNOP:
 			if (h->opn1.kind == INT)  // x:=#k  li指令将立即加载到该寄存器中
-				fprintf(pfile, "  li $t3, %d\n", h->opn1.const_int);  //常量到$t3
+				fprintf(pfile, "    li $t3, %d\n", h->opn1.const_int);  //常量到$t3
 			else if (h->opn1.kind == FLOAT)
-				fprintf(pfile, "  li $t3, %f\n", h->opn1.const_float);
+				fprintf(pfile, "    li $t3, %f\n", h->opn1.const_float);
 			else if (h->opn1.kind == CHAR)
-				fprintf(pfile, "  li $t3, %d\n", h->opn1.const_char);
+				fprintf(pfile, "    li $t3, %d\n", h->opn1.const_char);
 			else { //  x := y  lw $1,10($2) --> $1 = memory[$2 + 10] 将内存的值取出来
-				fprintf(pfile, "  lw $t1, %d($sp)\n", h->opn1.offset);
-				fprintf(pfile, "  move $t3, $t1\n");
+				fprintf(pfile, "    lw $t1, %d($sp)\n", h->opn1.offset);
+				fprintf(pfile, "    move $t3, $t1\n");
 			}
 			//	sw $1, 10($2)  -->  memory[$2 + 10]= $1  结果存入寄存器中 将result的值存在result的偏移地址
-			fprintf(pfile, "  sw $t3, %d($sp)\n", h->result.offset);
+			fprintf(pfile, "    sw $t3, %d($sp)\n", h->result.offset);
 			break;
 		case INC:
 		case DEC:
-			fprintf(pfile, "  lw $t1, %d($sp)\n", h->opn1.offset);
-			fprintf(pfile, "  li $t2, 1\n");
-			if (h->op == INC) fprintf(pfile, "  add $t3, $t1, $t2\n");
-			else fprintf(pfile, "  sub $t3, $t1, $t2\n");
-			fprintf(pfile, "  sw $t3, %d($sp)\n", h->opn1.offset);
+			fprintf(pfile, "    lw $t1, %d($sp)\n", h->opn1.offset);
+			fprintf(pfile, "    li $t2, 1\n");
+			if (h->op == INC) fprintf(pfile, "    add $t3, $t1, $t2\n");
+			else fprintf(pfile, "    sub $t3, $t1, $t2\n");
+			fprintf(pfile, "    sw $t3, %d($sp)\n", h->opn1.offset);
 		case PLUS:	//x := y + z
 		case MINUS: //x := y - z
 		case STAR:	//x := y * z
 		case DIV:	//x := y / z
 			//opn1 -> $t1, opn2 -> $t2
-			fprintf(pfile, "  lw $t1, %d($sp)\n", h->opn1.offset);
-			fprintf(pfile, "  lw $t2, %d($sp)\n", h->opn2.offset);
+			fprintf(pfile, "    lw $t1, %d($sp)\n", h->opn1.offset);
+			fprintf(pfile, "    lw $t2, %d($sp)\n", h->opn2.offset);
 			if (h->op == PLUS)
-				fprintf(pfile, "  add $t3,$t1,$t2\n");
+				fprintf(pfile, "    add $t3,$t1,$t2\n");
 			else if (h->op == MINUS)
-				fprintf(pfile, "  sub $t3,$t1,$t2\n");
+				fprintf(pfile, "    sub $t3,$t1,$t2\n");
 			else if (h->op == STAR)
-				fprintf(pfile, "  mul $t3,$t1,$t2\n");
+				fprintf(pfile, "    mul $t3,$t1,$t2\n");
 			else {
-				fprintf(pfile, "  div $t1, $t2\n");
-				fprintf(pfile, "  mflo $t3\n");
+				fprintf(pfile, "    div $t1, $t2\n");
+				fprintf(pfile, "    mflo $t3\n");
 			}
 			// 计算结果保存到临时变量的地址中
-			fprintf(pfile, "  sw $t3, %d($sp)\n", h->result.offset);
+			fprintf(pfile, "    sw $t3, %d($sp)\n", h->result.offset);
 			break;
 		case FUNCTION:
 			fprintf(pfile, "\n%s:\n", h->result.id);
 			// 对main函数单独开辟栈帧
 			if (!strcmp(h->result.id, "main"))
-				fprintf(pfile, "  addi $sp, $sp, -%d\n", symbolTable.symbols[h->result.offset].offset);
+				fprintf(pfile, "    addi $sp, $sp, -%d\n", symbolTable.symbols[h->result.offset].offset);
 			break;
 		case PARAM:
 			break;
@@ -983,7 +1005,7 @@ void objectCode(struct codenode *head) {  //目标代码生成
 			fprintf(pfile, "%s:\n", h->result.id);
 			break;
 		case GOTO: // j target
-			fprintf(pfile, "  j %s\n", h->result.id);
+			fprintf(pfile, "    j %s\n", h->result.id);
 			break;
 		case JLE:
 		case JLT:
@@ -991,66 +1013,66 @@ void objectCode(struct codenode *head) {  //目标代码生成
 		case JGT:
 		case EQ:
 		case NEQ:  // lw $1,10($2)  -->  $1 = memory[$2 + 10]  将内存的值取出来
-			fprintf(pfile, "  lw $t1, %d($sp)\n", h->opn1.offset);
-			fprintf(pfile, "  lw $t2, %d($sp)\n", h->opn2.offset);
+			fprintf(pfile, "    lw $t1, %d($sp)\n", h->opn1.offset);
+			fprintf(pfile, "    lw $t2, %d($sp)\n", h->opn2.offset);
 			//if rs relop rt then branch(转到label)
 			if (h->op == JLE)
-				fprintf(pfile, "  ble $t1,$t2,%s\n", h->result.id);
+				fprintf(pfile, "    ble $t1,$t2,%s\n", h->result.id);
 			else if (h->op == JLT)
-				fprintf(pfile, "  blt $t1,$t2,%s\n", h->result.id);
+				fprintf(pfile, "    blt $t1,$t2,%s\n", h->result.id);
 			else if (h->op == JGE)
-				fprintf(pfile, "  bge $t1,$t2,%s\n", h->result.id);
+				fprintf(pfile, "    bge $t1,$t2,%s\n", h->result.id);
 			else if (h->op == JGT)
-				fprintf(pfile, "  bgt $t1,$t2,%s\n", h->result.id);
+				fprintf(pfile, "    bgt $t1,$t2,%s\n", h->result.id);
 			else if (h->op == EQ)
-				fprintf(pfile, "  beq $t1,$t2,%s\n", h->result.id);
+				fprintf(pfile, "    beq $t1,$t2,%s\n", h->result.id);
 			else
-				fprintf(pfile, "  bne $t1,$t2,%s\n", h->result.id);
+				fprintf(pfile, "    bne $t1,$t2,%s\n", h->result.id);
 			break;
 		case ARG:
 			break;
 		case CALL:
 			if (!strcmp(h->opn1.id, "read")) {
-				fprintf(pfile, "  addi $sp, $sp, -4\n");  //rt <-- rs + imm立即数加
-				fprintf(pfile, "  sw $ra,0($sp)\n");
-				fprintf(pfile, "  jal read\n");
-				fprintf(pfile, "  lw $ra,0($sp)\n");
-				fprintf(pfile, "  addi $sp, $sp, 4\n");
-				fprintf(pfile, "  sw $v0, %d($sp)\n", h->result.offset);
+				fprintf(pfile, "    addi $sp, $sp, -4\n");  //rt <-- rs + imm立即数加
+				fprintf(pfile, "    sw $ra,0($sp)\n");
+				fprintf(pfile, "    jal read\n");
+				fprintf(pfile, "    lw $ra,0($sp)\n");
+				fprintf(pfile, "    addi $sp, $sp, 4\n");
+				fprintf(pfile, "    sw $v0, %d($sp)\n", h->result.offset);
 				break;
 			}
 			if (!strcmp(h->opn1.id, "write")) {
-				fprintf(pfile, "  lw $a0, %d($sp)\n", h->prior->result.offset);
-				fprintf(pfile, "  addi $sp, $sp, -4\n");
-				fprintf(pfile, "  sw $ra,0($sp)\n");
-				fprintf(pfile, "  jal write\n");
-				fprintf(pfile, "  lw $ra,0($sp)\n");
-				fprintf(pfile, "  addi $sp, $sp, 4\n");
+				fprintf(pfile, "    lw $a0, %d($sp)\n", h->prior->result.offset);
+				fprintf(pfile, "    addi $sp, $sp, -4\n");
+				fprintf(pfile, "    sw $ra,0($sp)\n");
+				fprintf(pfile, "    jal write\n");
+				fprintf(pfile, "    lw $ra,0($sp)\n");
+				fprintf(pfile, "    addi $sp, $sp, 4\n");
 				break;
 			}
 			//读取参数个数
 			for (pt = h, i = 0; i < symbolTable.symbols[h->opn1.offset].paramnum; i++)
 				pt = pt->prior;
-			fprintf(pfile, "  move $t0,$sp\n");
-			fprintf(pfile, "  addi $sp,$sp,-%d\n", symbolTable.symbols[h->opn1.offset].offset);
+			fprintf(pfile, "    move $t0,$sp\n");
+			fprintf(pfile, "    addi $sp,$sp,-%d\n", symbolTable.symbols[h->opn1.offset].offset);
 			// $ra 返回地址
-			fprintf(pfile, "  sw $ra,0($sp)\n");
+			fprintf(pfile, "    sw $ra,0($sp)\n");
 			i = h->opn1.offset + 1;
 			while (symbolTable.symbols[i].flag == 'P') {
-				fprintf(pfile, "  lw $t1,%d($t0)\n", pt->result.offset);
-				fprintf(pfile, "  move $t3,$t1\n");
-				fprintf(pfile, "  sw $t3,%d($sp)\n", symbolTable.symbols[i].offset);
+				fprintf(pfile, "    lw $t1,%d($t0)\n", pt->result.offset);
+				fprintf(pfile, "    move $t3,$t1\n");
+				fprintf(pfile, "    sw $t3,%d($sp)\n", symbolTable.symbols[i].offset);
 				pt = pt->next;
 				i++;
 			}
-			fprintf(pfile, "  jal %s\n", h->opn1.id);
-			fprintf(pfile, "  lw $ra,0($sp)\n");
-			fprintf(pfile, "  addi $sp,$sp,%d\n", symbolTable.symbols[h->opn1.offset].offset);
-			fprintf(pfile, "  sw $v0,%d($sp)\n", h->result.offset);
+			fprintf(pfile, "    jal %s\n", h->opn1.id);
+			fprintf(pfile, "    lw $ra,0($sp)\n");
+			fprintf(pfile, "    addi $sp,$sp,%d\n", symbolTable.symbols[h->opn1.offset].offset);
+			fprintf(pfile, "    sw $v0,%d($sp)\n", h->result.offset);
 			break;
 		case RETURN:
-			fprintf(pfile, "  lw $v0,%d($sp)\n", h->result.offset);
-			fprintf(pfile, "  jr $ra\n");
+			fprintf(pfile, "    lw $v0,%d($sp)\n", h->result.offset);
+			fprintf(pfile, "    jr $ra\n");
 			break;
 		}
         h = h->next;
@@ -1058,17 +1080,17 @@ void objectCode(struct codenode *head) {  //目标代码生成
     fclose(pfile);
 }
 
-void semantic_AnalysisInit(struct node *T) {
+void semantic_AnalysisInit(struct node *T, char *filename) {
     symbolTable.index = 0;
     fillSymbolTable("read", "", 0, INT, 'F', 4);
     symbolTable.symbols[0].paramnum = 0;  //read的形参个数
     fillSymbolTable("write", "", 0, INT, 'F', 4);
     symbolTable.symbols[1].paramnum = 1;
-    fillSymbolTable("x", "", 1, INT, 'P', 12);
+    fillSymbolTable("lyg", "", 1, INT, 'P', 12);
     symbol_scope_Stack.ScopeArray[0] = 0;  //外部变量在符号表中的起始序号为0
     symbol_scope_Stack.top = 1;
     T->offset = 0;  //外部变量在数据区的偏移量
     semantic_Analysis(T);
     prnIR(T->code);  //在终端显示中间代码
-    objectCode(T->code);  //生成目标代码
+    objectCode(T->code, filename);  //生成目标代码
  } 

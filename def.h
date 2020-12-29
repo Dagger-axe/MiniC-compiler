@@ -75,11 +75,11 @@ struct symbol_scope_array {  //用于查询栈顶位置以及在退出一层时�
 
 
 struct node *mknode(int kind, struct node *first, struct node *second, struct node *third, int position);
-void semantic_AnalysisInit(struct node *T);
+void semantic_AnalysisInit(struct node *T, char *filename);
 void semantic_Analysis(struct node *T);
 void boolExp(struct node *T);
 void Exp(struct node *T);
-void objectCode(struct codenode *head);
+void objectCode(struct codenode *head, char *filename);
 
 /*---将int型的输入转换为int值，可匹配十六进制---*/
 int to_int(char *str);

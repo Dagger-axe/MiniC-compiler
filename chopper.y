@@ -2,14 +2,17 @@
 %error-verbose
 %locations
 %{
-    #include "stdio.h"
-    #include "math.h"
-    #include "string.h"
-    #include "def.h"
+    #include <stdio.h>
+    #include <math.h>
+    #include <string.h>
     #include <stdarg.h>
+    #include <unistd.h>
+    #include "def.h"
     extern int yylineno;
     extern char *yytext;
     extern FILE *yyin;
+    //用户定义输出文件
+    char filename[64];
     //消除warning的声明
     void yyerror(const char* fmt, ...);
     void displayAST(struct node *, int);   
@@ -37,19 +40,23 @@
 %token LP RP LC RC SEMI COMMA
 %token PLUSOP MINUSOP STAROP DIVOP INC DEC PLUS MINUS STAR DIV ASSIGNOP AND OR NOT
 %token IF ELSE WHILE RETURN BREAK CONTINUE
-%right PLUSOP MINUSOP STAROP DIVOP ASSIGNOP
-%left OR AND RELOP
-%left PLUS MINUS STAR DIV
+
+%right ASSIGNOP PLUSOP MINUSOP STAROP DIVOP
+%left OR
+%left AND
+%left RELOP
+%left PLUS MINUS
+%left STAR DIV
 %right UMINUS NOT INC DEC
-%left RC RP
 %right LC LP
+%left RC RP
 
 %nonassoc LOWER_THEN_ELSE
 %nonassoc ELSE
 /*----------------------------------------------------------------------------*/
 %%
 /* 文法规约终点：语义分析入口 */
-Program: ExtDefList { semantic_AnalysisInit($1); }  //displayAST($1, 0);
+Program: ExtDefList { displayAST($1, 0);semantic_AnalysisInit($1, filename); }  //displayAST($1, 0);
     ; 
 /* 外部变量定义列表：整个语法树 */
 ExtDefList: { $$ = NULL; }
@@ -138,7 +145,45 @@ Args: Exp COMMA Args { $$ = mknode(ARGS, $1, $3, NULL, yylineno); }
 
 %%
 
+void print_help() {
+    printf("Usage:\t  ./chopper [-h] <file-name> [object-file-path]\n\n");
+    printf("-h\t\t    Shows this usage instructions\n");
+    printf("file-name\t    The name of the file to compile\n");
+    printf("object-file-path    The file name and path of the target file\n");
+}
+
 int main(int argc, char *argv[]){
+    if (argc != 2 && argc != 3) {
+        printf("[ERROR]***Invalid arguments provided. Use -h for help.\n");
+        return 0;
+    }
+    if (argc == 2 && !strcmp(argv[1], "-h")) {
+        print_help();
+        return 0;
+    }
+    /* 测试指定文件是否存在、是否可读 */
+    int ret = access(argv[1], F_OK);
+    if (ret == -1) {
+        printf("[ERROR]***No such initial file.\n");
+        return 0;
+    } else {
+        ret = access(argv[1], R_OK);
+        if (ret == -1) {
+            printf("[ERROR]***The initial file can\'t be read.\n");
+            return 0;
+        }
+    }
+    /* 当用户指定输出文件时，判断该路径是否存在 */
+    if (argc == 3) {
+        FILE *po = fopen(argv[2], "wb");
+        if (!po) {
+            printf("[ERROR]***The object path is wrong.\n");
+            fclose(po);
+            return 0;
+        } else strcpy(filename, argv[2]);
+        fclose(po);
+    } else strcpy(filename, "objectfile.s");
+
 	yyin = fopen(argv[1], "r");
 	if(!yyin) return 0;
 	yylineno = 1;
