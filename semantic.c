@@ -34,8 +34,7 @@ char *newTemp() {
 }
 
 //生成一条TAC代码的结点组成的双向循环链表，返回头指针
-struct codenode *genIR(int op, struct operandStruct opn1, struct operandStruct opn2,
-                       struct operandStruct result) {
+struct codenode *genIR(int op, struct operandStruct opn1, struct operandStruct opn2, struct operandStruct result) {
     struct codenode *h = (struct codenode *)malloc(sizeof(struct codenode));
     h->op = op;
     h->opn1 = opn1;
@@ -116,8 +115,7 @@ void prnIR(struct codenode *head) {
             case MINUS:
             case STAR:
             case DIV:
-                printf("  %s := %s %c %s\n", resultstr, opnstr1,
-                       (h->op == PLUS) ? '+' : (h->op == MINUS) ? '-' : (h->op == STAR) ? '*' : '/', opnstr2);
+                printf("  %s := %s %c %s\n", resultstr, opnstr1, (h->op == PLUS) ? '+' : (h->op == MINUS) ? '-' : (h->op == STAR) ? '*' : '/', opnstr2);
                 break;
             case INC:  // INC与DEC一致
             case DEC:
@@ -163,9 +161,8 @@ void prn_symbol() {  //显示符号表
         } else if (symbolTable.symbols[i].type == CHAR) {
             strcpy(symbol_type, "char");
         }
-        printf("%6s %6s %6d  %6s %4c %6d\n", symbolTable.symbols[i].name, symbolTable.symbols[i].alias,
-               symbolTable.symbols[i].level, symbol_type, symbolTable.symbols[i].flag,
-               symbolTable.symbols[i].offset);
+        printf("%6s %6s %6d  %6s %4c %6d\n", symbolTable.symbols[i].name, symbolTable.symbols[i].alias, symbolTable.symbols[i].level, symbol_type,
+               symbolTable.symbols[i].flag, symbolTable.symbols[i].offset);
     }
 }
 
@@ -475,8 +472,7 @@ void Exp(struct node *T) {  //处理基本表达式，参考文献[1]p82的思�
                 T->ptr[1]->offset = T->offset + T->ptr[0]->width;
                 Exp(T->ptr[1]);
 
-                if (T->ptr[0]->type == CHAR || T->ptr[1]->type == CHAR)
-                    semantic_error(T->position, "", "字符串类型不能参与运算");
+                if (T->ptr[0]->type == CHAR || T->ptr[1]->type == CHAR) semantic_error(T->position, "", "字符串类型不能参与运算");
                 if (T->ptr[0]->type == FLOAT || T->ptr[1]->type == FLOAT)
                     T->type = FLOAT, T->width = T->ptr[0]->width + T->ptr[1]->width + 4;
                 else if (T->ptr[0]->type == INT && T->ptr[1]->type == INT)
@@ -510,8 +506,7 @@ void Exp(struct node *T) {  //处理基本表达式，参考文献[1]p82的思�
                 T->ptr[1]->offset = T->offset + T->ptr[0]->width;
                 Exp(T->ptr[1]);
 
-                if (T->ptr[0]->type == CHAR || T->ptr[1]->type == CHAR)
-                    semantic_error(T->position, "", "字符串类型不能参与运算");
+                if (T->ptr[0]->type == CHAR || T->ptr[1]->type == CHAR) semantic_error(T->position, "", "字符串类型不能参与运算");
                 if (T->ptr[0]->type == FLOAT || T->ptr[1]->type == FLOAT)
                     T->type = FLOAT, T->width = T->ptr[0]->width + T->ptr[1]->width + 4;
                 else if (T->ptr[0]->type == INT && T->ptr[1]->type == INT)
@@ -519,8 +514,7 @@ void Exp(struct node *T) {  //处理基本表达式，参考文献[1]p82的思�
                 else
                     semantic_error(T->position, "", "表达式两侧类型不匹配");
 
-                T->place =
-                    fill_Temp(newTemp(), LEV, T->type, 'T', T->offset + T->ptr[0]->width + T->ptr[1]->width);
+                T->place = fill_Temp(newTemp(), LEV, T->type, 'T', T->offset + T->ptr[0]->width + T->ptr[1]->width);
                 opn1.kind = ID;
                 strcpy(opn1.id, symbolTable.symbols[T->ptr[0]->place].alias);
                 opn1.type = T->ptr[0]->type;
@@ -615,7 +609,7 @@ void Exp(struct node *T) {  //处理基本表达式，参考文献[1]p82的思�
                 T->place = fill_Temp(newTemp(), LEV, T->type, 'T', T->offset + T->width - width);
                 opn1.kind = ID;
                 strcpy(opn1.id, T->type_id);  //保存函数名
-                opn1.offset = rtn;  //这里offset用以保存函数定义入口, 在目标代码生成时，能获取相应信息
+                opn1.offset = rtn;            //这里offset用以保存函数定义入口, 在目标代码生成时，能获取相应信息
                 result.kind = ID;
                 strcpy(result.id, symbolTable.symbols[T->place].alias);
                 result.offset = symbolTable.symbols[T->place].offset;
@@ -666,8 +660,8 @@ void semantic_Analysis(struct node *T) {
                     T->type = T->ptr[1]->type = CHAR;
                     T->ptr[1]->width = 1;
                 }
-                T->ptr[1]->offset = T->offset;  //这个外部变量的偏移量向下传递
-                ext_var_list(T->ptr[1]);        //处理外部变量说明中的标识符序列
+                T->ptr[1]->offset = T->offset;                   //这个外部变量的偏移量向下传递
+                ext_var_list(T->ptr[1]);                         //处理外部变量说明中的标识符序列
                 T->width = (T->ptr[1]->width) * T->ptr[1]->num;  //计算这个外部变量说明的宽度
                 T->code = NULL;                                  //这里假定外部变量不支持初始化
                 break;
@@ -678,9 +672,9 @@ void semantic_Analysis(struct node *T) {
                     T->ptr[1]->type = FLOAT;
                 else
                     T->ptr[1]->type = CHAR;
-                T->width = 0;  //函数的宽度设置为0，不会对外部变量的地址分配产生影响
-                T->offset = DX;  //设置局部变量在活动记录中的偏移量初值
-                semantic_Analysis(T->ptr[1]);  //处理函数名和参数结点部分，这里不考虑用寄存器传递参数
+                T->width = 0;                   //函数的宽度设置为0，不会对外部变量的地址分配产生影响
+                T->offset = DX;                 //设置局部变量在活动记录中的偏移量初值
+                semantic_Analysis(T->ptr[1]);   //处理函数名和参数结点部分，这里不考虑用寄存器传递参数
                 T->offset += T->ptr[1]->width;  //用形参单元宽度修改函数局部变量的起始偏移量
                 T->ptr[2]->offset = T->offset;
                 strcpy(T->ptr[2]->Snext, newLabel());  //函数体语句执行结束后的位置属性
@@ -702,8 +696,8 @@ void semantic_Analysis(struct node *T) {
                 strcpy(result.id, T->type_id);
                 result.offset = rtn;
                 T->code = genIR(FUNCTION, opn1, opn2, result);  //生成中间代码：FUNCTION 函数名
-                T->offset = DX;   //设置形式参数在活动记录中的偏移量初值
-                if (T->ptr[0]) {  //判断是否有参数
+                T->offset = DX;                                 //设置形式参数在活动记录中的偏移量初值
+                if (T->ptr[0]) {                                //判断是否有参数
                     T->ptr[0]->offset = T->offset;
                     semantic_Analysis(T->ptr[0]);  //处理函数参数列表
                     T->width = T->ptr[0]->width;
@@ -760,9 +754,8 @@ void semantic_Analysis(struct node *T) {
                     T->code = merge(2, T->code, T->ptr[1]->code);
                 }
                 //                prn_symbol();  //c在退出一个符合语句前显示的符号表
-                LEV--;  //出复合语句，层号减1
-                symbolTable.index =
-                    symbol_scope_Stack.ScopeArray[--symbol_scope_Stack.top];  //删除该作用域中的符号
+                LEV--;                                                                        //出复合语句，层号减1
+                symbolTable.index = symbol_scope_Stack.ScopeArray[--symbol_scope_Stack.top];  //删除该作用域中的符号
                 break;
             case DEF_LIST:
                 T->code = NULL;
@@ -812,26 +805,23 @@ void semantic_Analysis(struct node *T) {
                             T0->ptr[0]->place = rtn;
                         T->width += width;
                     } else if (T0->ptr[0]->kind == ASSIGNOP) {  // int a, b = 1; 此时分析 b = 1的过程
-                        rtn = fillSymbolTable(T0->ptr[0]->ptr[0]->type_id, newAlias(), LEV, T0->ptr[0]->type,
-                                              'V', T->offset + T->width);  //此处偏移量未计算，暂时为0
+                        rtn = fillSymbolTable(T0->ptr[0]->ptr[0]->type_id, newAlias(), LEV, T0->ptr[0]->type, 'V',
+                                              T->offset + T->width);  //此处偏移量未计算，暂时为0
                         if (rtn == -1)
-                            semantic_error(T0->ptr[0]->ptr[0]->position, T0->ptr[0]->ptr[0]->type_id,
-                                           "变量重复定义");
-                        else {
+                            semantic_error(T0->ptr[0]->ptr[0]->position, T0->ptr[0]->ptr[0]->type_id, "变量重复定义");
+                        else {  //支持int a, b = 1, c = read();的形式
                             T0->ptr[0]->place = rtn;
                             T0->ptr[0]->ptr[1]->offset = T->offset + T->width + width;
                             Exp(T0->ptr[0]->ptr[1]);
                             opn1.kind = ID;
                             strcpy(opn1.id, symbolTable.symbols[T0->ptr[0]->ptr[1]->place].alias);
-                            opn1.offset = symbolTable.symbols[T0->ptr[0]->ptr[1]->place]
-                                              .offset;  //指定 a = 1 中临时变量 1 在栈中位置，以完成赋值
+                            //指定 a = 1 中临时变量 1 在栈中位置，以完成赋值
+                            opn1.offset = symbolTable.symbols[T0->ptr[0]->ptr[1]->place].offset;
                             result.kind = ID;
                             strcpy(result.id, symbolTable.symbols[T0->ptr[0]->place].alias);
-                            //支持int a, b = 1, c = read();的形式
-                            result.offset =
-                                symbolTable.symbols[rtn].offset;  //指定 a = 1 中变量 a 在栈中位置，以完成赋值
-                            T->code = merge(3, T->code, T0->ptr[0]->ptr[1]->code,
-                                            genIR(ASSIGNOP, opn1, opn2, result));
+                            //指定 a = 1 中变量 a 在栈中位置，以完成赋值
+                            result.offset = symbolTable.symbols[rtn].offset;
+                            T->code = merge(3, T->code, T0->ptr[0]->ptr[1]->code, genIR(ASSIGNOP, opn1, opn2, result));
                         }
                         T->width += width + T0->ptr[0]->ptr[1]->width;
                     }
@@ -859,8 +849,7 @@ void semantic_Analysis(struct node *T) {
                     //                  //顺序结构顺序分配单元方式
                     semantic_Analysis(T->ptr[1]);
                     //序列中第1条为表达式语句，返回语句，复合语句时，第2条前不需要标号
-                    if (T->ptr[0]->kind == RETURN || T->ptr[0]->kind == EXP_STMT ||
-                        T->ptr[0]->kind == COMP_STM)
+                    if (T->ptr[0]->kind == RETURN || T->ptr[0]->kind == EXP_STMT || T->ptr[0]->kind == COMP_STM)
                         T->code = merge(2, T->code, T->ptr[1]->code);
                     else
                         T->code = merge(3, T->code, genLabel(T->ptr[0]->Snext), T->ptr[1]->code);
@@ -891,8 +880,8 @@ void semantic_Analysis(struct node *T) {
                 strcpy(T->ptr[2]->Snext, T->Snext);
                 semantic_Analysis(T->ptr[2]);  // else子句
                 if (T->width < T->ptr[2]->width) T->width = T->ptr[2]->width;
-                T->code = merge(6, T->ptr[0]->code, genLabel(T->ptr[0]->Etrue), T->ptr[1]->code,
-                                genGoto(T->Snext), genLabel(T->ptr[0]->Efalse), T->ptr[2]->code);
+                T->code =
+                    merge(6, T->ptr[0]->code, genLabel(T->ptr[0]->Etrue), T->ptr[1]->code, genGoto(T->Snext), genLabel(T->ptr[0]->Efalse), T->ptr[2]->code);
                 break;
             case WHILE:
                 breakcode = NULL;
@@ -905,12 +894,11 @@ void semantic_Analysis(struct node *T) {
                 strcpy(T->ptr[1]->Snext, newLabel());
                 in_while = 1;
                 loop_lev++;
-                breakcode = genGoto(T->Snext);  //记录出口，即整个while的出口
+                breakcode = genGoto(T->Snext);             //记录出口，即整个while的出口
                 continuecode = genGoto(T->ptr[1]->Snext);  //记录入口，即循环体执行结束后下一次执行的入口
-                semantic_Analysis(T->ptr[1]);  //循环体
+                semantic_Analysis(T->ptr[1]);              //循环体
                 if (T->width < T->ptr[1]->width) T->width = T->ptr[1]->width;
-                T->code = merge(5, genLabel(T->ptr[1]->Snext), T->ptr[0]->code, genLabel(T->ptr[0]->Etrue),
-                                T->ptr[1]->code, genGoto(T->ptr[1]->Snext));
+                T->code = merge(5, genLabel(T->ptr[1]->Snext), T->ptr[0]->code, genLabel(T->ptr[0]->Etrue), T->ptr[1]->code, genGoto(T->ptr[1]->Snext));
                 in_while = 0;
                 loop_lev--;
                 breakcode = NULL;
@@ -1018,7 +1006,7 @@ void objectCode(struct codenode *head, char *filename) {  //目标代码生成
     do {
         switch (h->op) {
             case ASSIGNOP:
-                if (h->opn1.kind == INT)  // x:=#k  li指令将立即加载到该寄存器中
+                if (h->opn1.kind == INT)                                    // x:=#k  li指令将立即加载到该寄存器中
                     fprintf(pfile, "    li $t3, %d\n", h->opn1.const_int);  //常量到$t3
                 else if (h->opn1.kind == FLOAT)
                     fprintf(pfile, "    li $t3, %f\n", h->opn1.const_float);
@@ -1063,8 +1051,7 @@ void objectCode(struct codenode *head, char *filename) {  //目标代码生成
             case FUNCTION:
                 fprintf(pfile, "\n%s:\n", h->result.id);
                 // 对main函数单独开辟栈帧
-                if (!strcmp(h->result.id, "main"))
-                    fprintf(pfile, "    addi $sp, $sp, -%d\n", symbolTable.symbols[h->result.offset].offset);
+                if (!strcmp(h->result.id, "main")) fprintf(pfile, "    addi $sp, $sp, -%d\n", symbolTable.symbols[h->result.offset].offset);
                 break;
             case PARAM: break;
             case LABEL: fprintf(pfile, "%s:\n", h->result.id); break;

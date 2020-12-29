@@ -57,8 +57,7 @@ void displayAST(struct node *T, int indent) {  //对抽象语法树的先根遍�
                 break;
             }
             case PARAM_DEC: {
-                printf("%*c类型：%s, 参数名：%s\n", indent, ' ', T->ptr[0]->type == INT ? "int" : "float",
-                       T->ptr[1]->type_id);
+                printf("%*c类型：%s, 参数名：%s\n", indent, ' ', T->ptr[0]->type == INT ? "int" : "float", T->ptr[1]->type_id);
                 break;
             }
             case EXP_STMT: {
