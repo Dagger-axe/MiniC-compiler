@@ -11,12 +11,12 @@ int fibo(int ret) {
 int main() {    
     char ch = 'a';
     int ret = 1, num = read();
-    double aa = 1.3;
+    //float aa = 1.3;
     while (ret <= 4) {   //增加5次
         if (ret == 3) {
             ch = 'b';
             ret += 2;
-            aa += 2.1;
+            //aa += 2.1;
             continue;
         }
         if (ret == 4) break;  //if 限制仅增加3次

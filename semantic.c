@@ -1052,7 +1052,12 @@ void objectCode(struct codenode *head, char *filename) {  //目标代码生成
             case FUNCTION:
                 fprintf(pfile, "\n%s:\n", h->result.id);
                 // 对main函数单独开辟栈帧
-                if (!strcmp(h->result.id, "main")) fprintf(pfile, "    addi $sp, $sp, -%d\n", symbolTable.symbols[h->result.offset].offset);
+                if (!strcmp(h->result.id, "main")) {
+                    if (symbolTable.symbols[h->result.offset].offset < 0) 
+                        fprintf(pfile, "    addi $sp, $sp, %d\n", symbolTable.symbols[h->result.offset].offset);
+                    else
+                        fprintf(pfile, "    addi $sp, $sp, -%d\n", symbolTable.symbols[h->result.offset].offset);
+                }
                 break;
             case PARAM: break;
             case LABEL: fprintf(pfile, "%s:\n", h->result.id); break;
