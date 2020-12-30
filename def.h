@@ -45,7 +45,7 @@ struct operandStruct { /*中间代码操作数信息*/
     union {
         int const_int;      //整常数值，立即数
         float const_float;  //浮点常数值，立即数
-        char const_char;    //字符常数值，立即数
+        int const_char;    //字符常数值，立即数
         char id[33];        //变量、临时变量的别名、标号字符串
     };
     int level;   //变量的层号，0表示是全局变量，数据保存在静态数据区

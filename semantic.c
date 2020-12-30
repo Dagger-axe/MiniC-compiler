@@ -110,7 +110,7 @@ void prnIR(struct codenode *head) {
 
         sprintf(resultstr, "%s", h->result.id);
         switch (h->op) {
-            case ASSIGNOP: printf("  %s := %s offset:%d\n", resultstr, opnstr1, h->result.offset); break;
+            case ASSIGNOP: printf("  %s := %s\n", resultstr, opnstr1); break;
             case PLUS:
             case MINUS:
             case STAR:
@@ -420,12 +420,12 @@ void Exp(struct node *T) {  //处理基本表达式，参考文献[1]p82的思�
                 T->place = fill_Temp(newTemp(), LEV, T->type, 'T', T->offset);  //为字符变量生成一个临时变量
                 T->type = CHAR;
                 opn1.kind = CHAR;
-                opn1.const_char = T->type_char[1];
+                opn1.const_char = (int)T->type_char[1];
                 result.kind = ID;
                 strcpy(result.id, symbolTable.symbols[T->place].alias);
                 result.offset = symbolTable.symbols[T->place].offset;
                 T->code = genIR(ASSIGNOP, opn1, opn2, result);
-                T->width = 1;
+                T->width = 4;
                 break;
             case ASSIGNOP:
                 if (T->ptr[0]->kind != ID) {
@@ -471,8 +471,8 @@ void Exp(struct node *T) {  //处理基本表达式，参考文献[1]p82的思�
                 Exp(T->ptr[0]);
                 T->ptr[1]->offset = T->offset + T->ptr[0]->width;
                 Exp(T->ptr[1]);
-
-                if (T->ptr[0]->type == CHAR || T->ptr[1]->type == CHAR) semantic_error(T->position, "", "字符串类型不能参与运算");
+                if (T->ptr[0]->type == CHAR || T->ptr[1]->type == CHAR) 
+                    semantic_error(T->position, "", "字符串类型不能参与运算");
                 if (T->ptr[0]->type == FLOAT || T->ptr[1]->type == FLOAT)
                     T->type = FLOAT, T->width = T->ptr[0]->width + T->ptr[1]->width + 4;
                 else if (T->ptr[0]->type == INT && T->ptr[1]->type == INT)
@@ -480,22 +480,23 @@ void Exp(struct node *T) {  //处理基本表达式，参考文献[1]p82的思�
                 else
                     semantic_error(T->position, "", "表达式两侧类型不匹配");
 
-                // T->width = T->ptr[1]->width;
-                // T->code = merge(2, T->ptr[0]->code, T->ptr[1]->code);
                 opn1.kind = ID;
-                strcpy(opn1.id, symbolTable.symbols[T->ptr[1]->place].alias);  //此处与ASSIGNOP保持一致
-                opn1.offset = symbolTable.symbols[T->ptr[1]->place].offset;
-
-                opn2.kind = ID;
-                strcpy(opn2.id, symbolTable.symbols[T->ptr[0]->place].alias);  //另一个右值是自己
+                opn1.type = T->ptr[0]->type;
+                strcpy(opn1.id, symbolTable.symbols[T->ptr[0]->place].alias);  //此处与ASSIGNOP保持一致
                 opn1.offset = symbolTable.symbols[T->ptr[0]->place].offset;
 
+                opn2.kind = ID;
+                opn2.type = T->ptr[1]->type;
+                strcpy(opn2.id, symbolTable.symbols[T->ptr[1]->place].alias);  //另一个右值是自己
+                opn2.offset = symbolTable.symbols[T->ptr[1]->place].offset;
+
                 result.kind = ID;
+                result.type = T->ptr[0]->type;
                 strcpy(result.id, symbolTable.symbols[T->ptr[0]->place].alias);
                 result.offset = symbolTable.symbols[T->ptr[0]->place].offset;
 
-                T->code = merge(3, T->ptr[0]->code, T->ptr[1]->code, genIR(kind, opn1, opn2, result));
                 T->width = T->ptr[0]->width + T->ptr[1]->width + (T->type == INT ? 4 : 8);
+                T->code = merge(3, T->ptr[0]->code, T->ptr[1]->code, genIR(kind, opn1, opn2, result));                
                 break;
             case PLUS:
             case MINUS:
@@ -658,7 +659,7 @@ void semantic_Analysis(struct node *T) {
                     T->ptr[1]->width = 8;
                 } else if (!strcmp(T->ptr[0]->type_id, "char")) {
                     T->type = T->ptr[1]->type = CHAR;
-                    T->ptr[1]->width = 1;
+                    T->ptr[1]->width = 4;
                 }
                 T->ptr[1]->offset = T->offset;                   //这个外部变量的偏移量向下传递
                 ext_var_list(T->ptr[1]);                         //处理外部变量说明中的标识符序列
@@ -753,7 +754,7 @@ void semantic_Analysis(struct node *T) {
                     T->width += T->ptr[1]->width;
                     T->code = merge(2, T->code, T->ptr[1]->code);
                 }
-                //                prn_symbol();  //c在退出一个符合语句前显示的符号表
+//                prn_symbol();  //c在退出一个符合语句前显示的符号表
                 LEV--;                                                                        //出复合语句，层号减1
                 symbolTable.index = symbol_scope_Stack.ScopeArray[--symbol_scope_Stack.top];  //删除该作用域中的符号
                 break;
@@ -784,7 +785,7 @@ void semantic_Analysis(struct node *T) {
                     width = 8;
                 } else if (!strcmp(T->ptr[0]->type_id, "char")) {
                     T->ptr[1]->type = CHAR;
-                    width = 1;
+                    width = 4;
                 }
                 T0 = T->ptr[1];  // T0为变量名列表子树根指针，对ID、ASSIGNOP类结点在登记到符号表，作为局部变量
                 num = 0;
@@ -1140,6 +1141,6 @@ void semantic_AnalysisInit(struct node *T, char *filename) {
     symbol_scope_Stack.top = 1;
     T->offset = 0;  //外部变量在数据区的偏移量
     semantic_Analysis(T);
-    // prnIR(T->code);  //在终端显示中间代码
+    //prnIR(T->code);  //在终端显示中间代码
     objectCode(T->code, filename);  //生成目标代码
 }
