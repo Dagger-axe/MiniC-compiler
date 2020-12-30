@@ -922,7 +922,7 @@ void semantic_Analysis(struct node *T) {
                         width = (T0->ptr[0]->type == FLOAT) ? 8 : 4;
 						tol = T0->ptr[0]->type_int;
 						temp_T = T0->ptr[0]->ptr[0];
-						dimt_list->size = tol;     //从右向左
+						dimt_list->size = tol;  //从右向左
 						temp_dimt = dimt_list;
 						while(temp_T->kind != ID){
 							if(temp_T->ptr[0]->type_int <= 0){
@@ -942,8 +942,8 @@ void semantic_Analysis(struct node *T) {
 							semantic_error(T0->ptr[0]->position, T0->ptr[0]->type_id, "变量重复定义");
 							break;
 						}
-						(symbolTable.symbols[rtn]).arrlist = dimt_list;
-						(symbolTable.symbols[rtn]).dimension = dimt;
+						symbolTable.symbols[rtn].arrlist = dimt_list;
+						symbolTable.symbols[rtn].dimension = dimt;
 						T0->ptr[0]->place = rtn;
 						T0->ptr[0]->num = tol;
 						num += tol;
@@ -1106,8 +1106,7 @@ void objectCode(struct codenode *head, char *filename) {  //目标代码生成
 
     // .data
     fprintf(pfile, ".data\n");
-    fprintf(pfile,
-            "input_info:.asciiz \"Enter an integer num:\"\n");  //.asciiz str 储存str于内存中，以null结尾
+    fprintf(pfile, "input_info:.asciiz \"Enter an integer:\"\n");  //.asciiz str 储存str于内存中，以null结尾
     fprintf(pfile, "ret_info:.asciiz\"\\n\"\n");
     fprintf(pfile, ".globl main\n");  // global main
     // .text
@@ -1131,17 +1130,17 @@ void objectCode(struct codenode *head, char *filename) {  //目标代码生成
     do {
         switch (h->op) {
             case ASSIGNOP:
-                if (h->opn1.kind == INT)                                    // x:=#k  li指令将立即加载到该寄存器中
+                if (h->opn1.kind == INT)                                    //将立即加载到该寄存器中
                     fprintf(pfile, "    li $t3, %d\n", h->opn1.const_int);  //常量到$t3
                 else if (h->opn1.kind == FLOAT)
                     fprintf(pfile, "    li $t3, %f\n", h->opn1.const_float);
                 else if (h->opn1.kind == CHAR)
                     fprintf(pfile, "    li $t3, %d\n", h->opn1.const_char);
-                else {  //  x := y  lw $1,10($2) --> $1 = memory[$2 + 10] 将内存的值取出来
+                else {  //将内存的值取出来
                     fprintf(pfile, "    lw $t1, %d($sp)\n", h->opn1.offset);
                     fprintf(pfile, "    move $t3, $t1\n");
                 }
-                //	sw $1, 10($2)  -->  memory[$2 + 10]= $1  结果存入寄存器中 将result的值存在result的偏移地址
+                //将result的值存在result的偏移地址
                 fprintf(pfile, "    sw $t3, %d($sp)\n", h->result.offset);
                 break;
             case INC:
@@ -1157,25 +1156,23 @@ void objectCode(struct codenode *head, char *filename) {  //目标代码生成
             case MINUS:  // x := y - z
             case STAR:   // x := y * z
             case DIV:    // x := y / z
-                // opn1 -> $t1, opn2 -> $t2
                 fprintf(pfile, "    lw $t1, %d($sp)\n", h->opn1.offset);
                 fprintf(pfile, "    lw $t2, %d($sp)\n", h->opn2.offset);
                 if (h->op == PLUS)
-                    fprintf(pfile, "    add $t3,$t1,$t2\n");
+                    fprintf(pfile, "    add $t3, $t1, $t2\n");
                 else if (h->op == MINUS)
-                    fprintf(pfile, "    sub $t3,$t1,$t2\n");
+                    fprintf(pfile, "    sub $t3, $t1, $t2\n");
                 else if (h->op == STAR)
-                    fprintf(pfile, "    mul $t3,$t1,$t2\n");
+                    fprintf(pfile, "    mul $t3, $t1, $t2\n");
                 else {
                     fprintf(pfile, "    div $t1, $t2\n");
                     fprintf(pfile, "    mflo $t3\n");
                 }
-                // 计算结果保存到临时变量的地址中
-                fprintf(pfile, "    sw $t3, %d($sp)\n", h->result.offset);
+                fprintf(pfile, "    sw $t3, %d($sp)\n", h->result.offset);  //保存计算结果
                 break;
             case FUNCTION:
                 fprintf(pfile, "\n%s:\n", h->result.id);
-                // 对main函数单独开辟栈帧
+                //对main函数单独开辟栈帧
                 if (!strcmp(h->result.id, "main")) {
                     if (symbolTable.symbols[h->result.offset].offset < 0) 
                         fprintf(pfile, "    addi $sp, $sp, %d\n", symbolTable.symbols[h->result.offset].offset);
@@ -1193,30 +1190,30 @@ void objectCode(struct codenode *head, char *filename) {  //目标代码生成
             case JGE:
             case JGT:
             case EQ:
-            case NEQ:  // lw $1,10($2)  -->  $1 = memory[$2 + 10]  将内存的值取出来
+            case NEQ:  //将内存的值取出来
                 fprintf(pfile, "    lw $t1, %d($sp)\n", h->opn1.offset);
                 fprintf(pfile, "    lw $t2, %d($sp)\n", h->opn2.offset);
-                // if rs relop rt then branch(转到label)
+                //根据条件转移至指定Lable
                 if (h->op == JLE)
-                    fprintf(pfile, "    ble $t1,$t2,%s\n", h->result.id);
+                    fprintf(pfile, "    ble $t1, $t2, %s\n", h->result.id);
                 else if (h->op == JLT)
-                    fprintf(pfile, "    blt $t1,$t2,%s\n", h->result.id);
+                    fprintf(pfile, "    blt $t1, $t2, %s\n", h->result.id);
                 else if (h->op == JGE)
-                    fprintf(pfile, "    bge $t1,$t2,%s\n", h->result.id);
+                    fprintf(pfile, "    bge $t1, $t2, %s\n", h->result.id);
                 else if (h->op == JGT)
-                    fprintf(pfile, "    bgt $t1,$t2,%s\n", h->result.id);
+                    fprintf(pfile, "    bgt $t1, $t2, %s\n", h->result.id);
                 else if (h->op == EQ)
-                    fprintf(pfile, "    beq $t1,$t2,%s\n", h->result.id);
+                    fprintf(pfile, "    beq $t1, $t2, %s\n", h->result.id);
                 else
-                    fprintf(pfile, "    bne $t1,$t2,%s\n", h->result.id);
+                    fprintf(pfile, "    bne $t1, $t2, %s\n", h->result.id);
                 break;
             case ARG: break;
             case CALL:
                 if (!strcmp(h->opn1.id, "read")) {
                     fprintf(pfile, "    addi $sp, $sp, -4\n");  // rt <-- rs + imm立即数加
-                    fprintf(pfile, "    sw $ra,0($sp)\n");
+                    fprintf(pfile, "    sw $ra, 0($sp)\n");
                     fprintf(pfile, "    jal read\n");
-                    fprintf(pfile, "    lw $ra,0($sp)\n");
+                    fprintf(pfile, "    lw $ra, 0($sp)\n");
                     fprintf(pfile, "    addi $sp, $sp, 4\n");
                     fprintf(pfile, "    sw $v0, %d($sp)\n", h->result.offset);
                     break;
@@ -1224,33 +1221,33 @@ void objectCode(struct codenode *head, char *filename) {  //目标代码生成
                 if (!strcmp(h->opn1.id, "write")) {
                     fprintf(pfile, "    lw $a0, %d($sp)\n", h->prior->result.offset);
                     fprintf(pfile, "    addi $sp, $sp, -4\n");
-                    fprintf(pfile, "    sw $ra,0($sp)\n");
+                    fprintf(pfile, "    sw $ra, 0($sp)\n");
                     fprintf(pfile, "    jal write\n");
-                    fprintf(pfile, "    lw $ra,0($sp)\n");
+                    fprintf(pfile, "    lw $ra, 0($sp)\n");
                     fprintf(pfile, "    addi $sp, $sp, 4\n");
                     break;
                 }
                 //读取参数个数
                 for (pt = h, i = 0; i < symbolTable.symbols[h->opn1.offset].paramnum; i++) pt = pt->prior;
-                fprintf(pfile, "    move $t0,$sp\n");
-                fprintf(pfile, "    addi $sp,$sp,-%d\n", symbolTable.symbols[h->opn1.offset].offset);
+                fprintf(pfile, "    move $t0, $sp\n");
+                fprintf(pfile, "    addi $sp, $sp, -%d\n", symbolTable.symbols[h->opn1.offset].offset);
                 // $ra 返回地址
-                fprintf(pfile, "    sw $ra,0($sp)\n");
+                fprintf(pfile, "    sw $ra, 0($sp)\n");
                 i = h->opn1.offset + 1;
                 while (symbolTable.symbols[i].flag == 'P') {
-                    fprintf(pfile, "    lw $t1,%d($t0)\n", pt->result.offset);
-                    fprintf(pfile, "    move $t3,$t1\n");
-                    fprintf(pfile, "    sw $t3,%d($sp)\n", symbolTable.symbols[i].offset);
+                    fprintf(pfile, "    lw $t1, %d($t0)\n", pt->result.offset);
+                    fprintf(pfile, "    move $t3, $t1\n");
+                    fprintf(pfile, "    sw $t3, %d($sp)\n", symbolTable.symbols[i].offset);
                     pt = pt->next;
                     i++;
                 }
                 fprintf(pfile, "    jal %s\n", h->opn1.id);
-                fprintf(pfile, "    lw $ra,0($sp)\n");
-                fprintf(pfile, "    addi $sp,$sp,%d\n", symbolTable.symbols[h->opn1.offset].offset);
-                fprintf(pfile, "    sw $v0,%d($sp)\n", h->result.offset);
+                fprintf(pfile, "    lw $ra, 0($sp)\n");
+                fprintf(pfile, "    addi $sp, $sp,%d\n", symbolTable.symbols[h->opn1.offset].offset);
+                fprintf(pfile, "    sw $v0, %d($sp)\n", h->result.offset);
                 break;
             case RETURN:
-                fprintf(pfile, "    lw $v0,%d($sp)\n", h->result.offset);
+                fprintf(pfile, "    lw $v0, %d($sp)\n", h->result.offset);
                 fprintf(pfile, "    jr $ra\n");
                 break;
         }

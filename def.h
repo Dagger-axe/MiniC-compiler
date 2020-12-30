@@ -86,7 +86,7 @@ struct node {  //以下对结点属性定义没有考虑存储效率，只是简
 /* 数组的结构体定义，包括数组第i维大小及下一维指针 */
 struct arrnode {
     int size;  //该维度大小
-    struct arrnode *next;
+    struct arrnode *next;  //上一维指针
 };
 
 /*符号表中元素结构*/
