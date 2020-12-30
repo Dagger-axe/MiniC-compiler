@@ -12,6 +12,11 @@ struct node *mknode(int kind, struct node *first, struct node *second, struct no
 void displayAST(struct node *T, int indent) {  //对抽象语法树的先根遍历
     int i = 1;
     struct node *T0;
+    //遍历数组所需
+    int arrdimt;  //数组维度的判断标准
+    int *arrdimt_info;  //数组维度信息
+    char arrname[32];  //数组名
+    struct node **array;  //数组指针
     if (T) {
         switch (T->kind) {
             case EXT_DEF_LIST: {
@@ -30,6 +35,57 @@ void displayAST(struct node *T, int indent) {  //对抽象语法树的先根遍�
                 printf("%*c类型： %s\n", indent, ' ', T->type_id);
                 break;
             }
+            case ARR_DEC:
+                printf("%*c数组声明：\n", indent, ' ');
+                T0 = T;
+                arrdimt = 1;
+                while (T0->ptr[0]->kind == ARR_DEC) {
+                    T0 = T0->ptr[0];
+                    arrdimt += 1;  //确定多维数组的维度
+                }
+                T0 = T;
+                arrdimt_info = (int*)malloc(sizeof(int) * arrdimt);  //储存数组维度信息
+                i = arrdimt;
+                while (T0->ptr[0]) {
+                    i--;
+                    arrdimt_info[i] = T0->type_int;   //获取数组维度
+                    if(!i) strcpy(arrname, T0 -> ptr[0] -> type_id);
+                    T0 = T0->ptr[0];
+                }
+                printf("%*c维度：", indent + 3, ' ');
+                while (i < arrdimt - 1) {
+                    printf("[%d]", arrdimt_info[i]);
+                    i++;
+                }
+                printf("\n");
+                printf("%*c数组名：%s\n", indent + 3, ' ', arrname);
+                free(arrdimt_info);
+                break;
+            case ARR_EXP:
+                printf("%*c数组内部表达式：\n", indent, ' ');
+                T0 = T;
+                arrdimt = 1;
+                while (T0->ptr[0]->kind != ID) {
+                    T0 = T0->ptr[0];
+                    arrdimt++;
+                }
+                T0 = T;
+                array = (struct node **)malloc(sizeof(struct node *) * arrdimt);
+                i = arrdimt;
+                while (T0->ptr[0]) {
+                    i--;
+                    array[i] = T0;
+                    T0 = T0->ptr[0];
+                }
+                printf("%*c数组名：%s\n", indent + 3, ' ', array[0]->ptr[0]->type_id);
+                while (i < arrdimt)
+                {
+                    printf("%*c数组第%d维度表达式：\n", indent + 3, ' ', i + 1);
+                    displayAST(array[i]->ptr[1], indent + 6);
+                    i++;
+                }
+                free(array);
+                break;
             case EXT_DEC_LIST: {
                 displayAST(T->ptr[0], indent);  //依次显示外部变量名，
                 displayAST(T->ptr[1], indent);  //后续还有相同的，仅显示语法树此处理代码可以和类似代码合并
@@ -139,7 +195,32 @@ void displayAST(struct node *T, int indent) {  //对抽象语法树的先根遍�
                                T0->ptr[0]->ptr[0]->type_id);  //输出num = 1;的num
                         //显示初始化表达式
                         displayAST(T0->ptr[0]->ptr[1], indent + strlen(T0->ptr[0]->ptr[0]->type_id) + 4);
-                    }
+                    } else if (T0->ptr[0]->kind == ARR_DEC) {
+                        printf("%*c数组声明：\n", indent+3, ' ');
+                        T0 = T;
+                        arrdimt = 1;
+                        while (T0->ptr[0]->kind != ID) {
+                            T0 = T0->ptr[0];
+                            arrdimt++;
+                        }
+                        T0 = T;
+                        array = (struct node **)malloc(sizeof(struct node *) * arrdimt);
+                        i = arrdimt;
+                        while (T0->ptr[0]) {
+                            i--;
+                            array[i] = T0;
+                            T0 = T0->ptr[0];
+                        }
+                        printf("%*c维度：", indent + 6, ' ');
+                        while (i < arrdimt - 1) {
+                            printf("[%d]", (array[i])->type_int);
+                            i++;
+                        }
+                        printf("\n");
+                        printf("%*c数组名：%s\n", indent + 6, ' ', array[0]->ptr[0]->type_id);
+                        free(array);
+                        break;  //已深度遍历，提前break
+					}
                     T0 = T0->ptr[1];
                 }
                 break;

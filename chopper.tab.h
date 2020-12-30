@@ -55,30 +55,34 @@ extern int yydebug;
     RP = 265,
     LC = 266,
     RC = 267,
-    SEMI = 268,
-    COMMA = 269,
-    PLUSOP = 270,
-    MINUSOP = 271,
-    STAROP = 272,
-    DIVOP = 273,
-    INC = 274,
-    DEC = 275,
-    PLUS = 276,
-    MINUS = 277,
-    STAR = 278,
-    DIV = 279,
-    ASSIGNOP = 280,
-    AND = 281,
-    OR = 282,
-    NOT = 283,
-    IF = 284,
-    ELSE = 285,
-    WHILE = 286,
-    RETURN = 287,
-    BREAK = 288,
-    CONTINUE = 289,
-    UMINUS = 290,
-    LOWER_THEN_ELSE = 291
+    LB = 268,
+    RB = 269,
+    SEMI = 270,
+    COMMA = 271,
+    PLUSOP = 272,
+    MINUSOP = 273,
+    STAROP = 274,
+    DIVOP = 275,
+    INC = 276,
+    DEC = 277,
+    PLUS = 278,
+    MINUS = 279,
+    STAR = 280,
+    DIV = 281,
+    ASSIGNOP = 282,
+    AND = 283,
+    OR = 284,
+    NOT = 285,
+    IF = 286,
+    ELSE = 287,
+    WHILE = 288,
+    RETURN = 289,
+    BREAK = 290,
+    CONTINUE = 291,
+    ARR_DEC = 292,
+    ARR_EXP = 293,
+    UMINUS = 294,
+    LOWER_THEN_ELSE = 295
   };
 #endif
 
@@ -95,7 +99,7 @@ union YYSTYPE
     char type_char[4];
 	struct node *ptr;
 
-#line 99 "chopper.tab.h" /* yacc.c:1909  */
+#line 103 "chopper.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

@@ -85,6 +85,16 @@ struct codenode *merge(int num, ...) {
     return h1;
 }
 
+int get_arrBase(struct arrnode * T, int dimt){  //获取当前维度的数组基址
+	struct arrnode * T0 = T;
+	int res = 1;
+	while(dimt--){
+		res *= T0->size;
+		T0 = T0 ->next;
+	}
+	return res;
+}
+
 //输出中间代码
 void prnIR(struct codenode *head) {
     char opnstr1[32], opnstr2[32], resultstr[32];
@@ -211,6 +221,11 @@ int func_size;  // 1个函数的活动记录大小
 
 void ext_var_list(struct node *T) {  //处理变量列表
     int rtn, num = 1;
+    //数组所需
+	struct arrnode * dimt_list = (struct arrnode*)malloc(sizeof(struct arrnode));
+	struct arrnode * temp_dimt;
+    int width, tol;
+    struct node *temp_T;
     switch (T->kind) {
         case EXT_DEC_LIST:
             T->ptr[0]->type = T->type;                 //将类型属性向下传递变量结点
@@ -230,6 +245,39 @@ void ext_var_list(struct node *T) {  //处理变量列表
                 T->place = rtn;
             T->num = 1;
             break;
+        case ARR_DEC:
+			width = (T->type == FLOAT) ? 8 : 4;
+			tol = T->type_int;
+			temp_T = T->ptr[0];
+			dimt_list->size = tol;   //从右向左
+			temp_dimt = dimt_list;
+			//处理维度
+			num = 1;
+			while (temp_T->kind != ID) {
+				if (temp_T->ptr[0]->type_int == 0)
+                    semantic_error(T->position, T->type_id, "数组下标为0！");
+				if (temp_T->ptr[0]->type_int < 0)
+                    semantic_error(T->position, T->type_id, "数组下标为负！");
+				temp_dimt->next = (struct arrnode*)malloc(sizeof(struct arrnode));
+				temp_dimt->next->size = temp_T->type_int;
+				temp_dimt = temp_dimt->next;
+				tol = tol * temp_T->type_int;
+				num++;
+				temp_T = temp_T->ptr[0];
+			}
+			temp_dimt->next = NULL;
+			T->width = width * tol;
+			//加入符号表
+			rtn = fillSymbolTable(temp_T->type_id, newAlias(), LEV, T->type, 'A', T->offset);
+			if (rtn == -1) {
+				semantic_error(T->position, T->type_id, "变量重复定义");
+				break;
+			}
+			symbolTable.symbols[rtn].arrlist = dimt_list;
+			symbolTable.symbols[rtn].dimension = num;
+			T->place = rtn;
+			T->num = tol;
+			break;
     }
 }
 
@@ -376,7 +424,7 @@ void boolExp(struct node *T) {  //布尔表达式，参考文献[1]p84的思想
 }
 
 void Exp(struct node *T) {  //处理基本表达式，参考文献[1]p82的思想
-    int rtn, num, width, kind;
+    int rtn, num, width, kind, now_dimt;
     struct node *T0;
     struct operandStruct opn1, opn2, result;
     if (T) {
@@ -427,14 +475,46 @@ void Exp(struct node *T) {  //处理基本表达式，参考文献[1]p82的思�
                 T->code = genIR(ASSIGNOP, opn1, opn2, result);
                 T->width = 4;
                 break;
+            case ARR_EXP:
+				T0 = T;
+				while(T0->kind != ID) T0 = T0 -> ptr[0];  //找到该数组
+				rtn = searchSymbolTable(T0->type_id);
+				if (rtn == -1) {
+					semantic_error(T->position, "", "数组未定义");
+					break;
+				} else if (symbolTable.symbols[rtn].flag != 'A') {
+                    semantic_error(T->position, "", "该变量非数组");
+                    break;
+				}
+				T->type = symbolTable.symbols[rtn].type;
+				T0 = T;
+				num = 0;
+				now_dimt = symbolTable.symbols[rtn].dimension;  //维数
+				while (T0->kind != ID) {
+					Exp(T0->ptr[1]);
+					if (T0->ptr[1]->type != INT) {
+						semantic_error(T->position, "", "数组下标非INT类型");
+						break;
+					}
+					num += T0->ptr[1]->type_int * get_arrBase(symbolTable.symbols[rtn].arrlist, symbolTable.symbols[rtn].dimension - now_dimt);
+					T0 = T0->ptr[0];
+					now_dimt--;
+				}
+				if (T0->kind == ID && now_dimt)
+					semantic_error(T->position, "", "数组引用不完整");
+				else {
+					T->offset = symbolTable.symbols[rtn].offset + num * (T->type == FLOAT ? 8 : 4);
+					T->place = fill_Temp(strcat(newTemp(), "_arr"), LEV, T->type, 'T', T->offset);
+				}
+				break;
             case ASSIGNOP:
-                if (T->ptr[0]->kind != ID) {
+                if (T->ptr[0]->kind != ID && T->ptr[0]->kind != ARR_EXP) {
                     semantic_error(T->position, "", "赋值语句需要左值");
                 } else {
                     Exp(T->ptr[0]);  //处理左值，例中仅为变量
                     T->ptr[1]->offset = T->offset;
                     Exp(T->ptr[1]);
-                    if (T->ptr[0]->type != T->ptr[1]->type) {
+                    if (T->ptr[0]->type != T->ptr[1]->type && T->ptr[0]->type != ARR_EXP) {
                         semantic_error(T->position, "", "赋值语句两边的类型不匹配");
                         break;
                     }
@@ -442,8 +522,7 @@ void Exp(struct node *T) {  //处理基本表达式，参考文献[1]p82的思�
                     T->width = T->ptr[1]->width;
                     T->code = merge(2, T->ptr[0]->code, T->ptr[1]->code);
                     opn1.kind = ID;
-                    strcpy(opn1.id,
-                           symbolTable.symbols[T->ptr[1]->place].alias);  //右值一定是个变量或临时变量
+                    strcpy(opn1.id, symbolTable.symbols[T->ptr[1]->place].alias);  //右值一定是个变量或临时变量
                     opn1.offset = symbolTable.symbols[T->ptr[1]->place].offset;
                     result.kind = ID;
                     strcpy(result.id, symbolTable.symbols[T->ptr[0]->place].alias);
@@ -471,6 +550,10 @@ void Exp(struct node *T) {  //处理基本表达式，参考文献[1]p82的思�
                 Exp(T->ptr[0]);
                 T->ptr[1]->offset = T->offset + T->ptr[0]->width;
                 Exp(T->ptr[1]);
+                if (T->ptr[0]->kind != ID && T->ptr[0]->kind != ARR_DEC && T->ptr[0]->kind != ARR_EXP) {
+					semantic_error(T->position, "", "复合赋值语句左值错误");
+					break;
+				}
                 if (T->ptr[0]->type == CHAR || T->ptr[1]->type == CHAR) 
                     semantic_error(T->position, "", "字符串类型不能参与运算");
                 if (T->ptr[0]->type == FLOAT || T->ptr[1]->type == FLOAT)
@@ -534,6 +617,10 @@ void Exp(struct node *T) {  //处理基本表达式，参考文献[1]p82的思�
             case INC:  // a++ ++a a-- --a
             case DEC:
                 Exp(T->ptr[0]);
+                if (T->ptr[0]->kind != ID && T->ptr[0]->kind != ARR_DEC && T->ptr[0]->kind != ARR_EXP) {
+					semantic_error(T->position, "", "自增/减语句左值错误");
+					break;
+				}
                 if (T->ptr[0]->kind != ID) {
                     semantic_error(T->position, "", "自增/减语句左值不符合要求");
                     break;
@@ -587,7 +674,7 @@ void Exp(struct node *T) {  //处理基本表达式，参考文献[1]p82的思�
                     break;
                 }
                 T->type = symbolTable.symbols[rtn].type;
-                width = T->type == INT ? 4 : 8;  //存放函数返回值的单数字节数
+                width = T->type == FLOAT ? 8 : 4;  //存放函数返回值的单数字节数
                 if (T->ptr[0]) {
                     T->ptr[0]->offset = T->offset;
                     Exp(T->ptr[0]);                       //处理所有实参表达式求值，及类型
@@ -637,6 +724,11 @@ void semantic_Analysis(struct node *T) {
     int rtn, num, width, paranum;
     struct node *T0;
     struct operandStruct opn1, opn2, result;
+    //数组所需
+    struct node *temp_T;
+    int tol, dimt;
+    struct arrnode * dimt_list = (struct arrnode*)malloc(sizeof(struct arrnode));
+    struct arrnode * temp_dimt;
     if (T) {
         switch (T->kind) {
             case EXT_DEF_LIST:
@@ -825,6 +917,37 @@ void semantic_Analysis(struct node *T) {
                             T->code = merge(3, T->code, T0->ptr[0]->ptr[1]->code, genIR(ASSIGNOP, opn1, opn2, result));
                         }
                         T->width += width + T0->ptr[0]->ptr[1]->width;
+                    } else if (T0->ptr[0]->kind == ARR_DEC){
+						dimt = 1;
+                        width = (T0->ptr[0]->type == FLOAT) ? 8 : 4;
+						tol = T0->ptr[0]->type_int;
+						temp_T = T0->ptr[0]->ptr[0];
+						dimt_list->size = tol;     //从右向左
+						temp_dimt = dimt_list;
+						while(temp_T->kind != ID){
+							if(temp_T->ptr[0]->type_int <= 0){
+								semantic_error(T->position, T->type_id, "数组下标为0或为负");
+							}
+							temp_dimt->next = (struct arrnode*)malloc(sizeof(struct arrnode));
+							temp_dimt->next->size = temp_T->type_int;
+							temp_dimt = temp_dimt->next;
+							tol *= temp_T->type_int;
+							dimt++;
+							temp_T = temp_T->ptr[0];
+						}
+						temp_dimt->next = NULL;
+						T0->ptr[0]->width = width * tol;
+						rtn = fillSymbolTable(temp_T->type_id, newAlias(), LEV, T0->ptr[0]->type, 'A', T0->ptr[0]->offset);
+						if(rtn == -1){
+							semantic_error(T0->ptr[0]->position, T0->ptr[0]->type_id, "变量重复定义");
+							break;
+						}
+						(symbolTable.symbols[rtn]).arrlist = dimt_list;
+						(symbolTable.symbols[rtn]).dimension = dimt;
+						T0->ptr[0]->place = rtn;
+						T0->ptr[0]->num = tol;
+						num += tol;
+						T->width += T0->ptr[0]->width;
                     }
                     T0 = T0->ptr[1];
                 }
@@ -961,6 +1084,7 @@ void semantic_Analysis(struct node *T) {
             case MINUS:
             case STAR:
             case DIV:
+            case ARR_EXP:
             case NOT:
             case UMINUS:
             case FUNC_CALL:

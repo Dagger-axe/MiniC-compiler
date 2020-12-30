@@ -67,6 +67,7 @@ struct node {  //以下对结点属性定义没有考虑存储效率，只是简
         int type_int;       //由整常数生成的叶结点
         float type_float;   //由浮点常数生成的叶结点
         char type_char[4];  // 'c'
+        struct Arr * type_array;  //由数组生成的叶节点
     };
     struct node *ptr[3];  //子树指针，由kind确定有多少棵子树
     int level;            //层号
@@ -81,17 +82,25 @@ struct node {  //以下对结点属性定义没有考虑存储效率，只是简
     int width;     //各种数据占用的字节数
     int num;       //参数个数
 };
+
+/* 数组的结构体定义，包括数组第i维大小及下一维指针 */
+struct arrnode {
+    int size;  //该维度大小
+    struct arrnode *next;
+};
+
 /*符号表中元素结构*/
 struct symbol {     //这里只列出了一个符号表项的部分属性，没考虑属性间的互斥
     char name[33];  //变量或函数名
-    int level;  //层号，外部变量名或函数名，层号为0；形参为1；进入复合语句加1，退出减1
+    int level;      //层号，外部变量名或函数名，层号为0；形参为1；进入复合语句加1，退出减1
     int type;        //变量类型或函数返回值类型, 1表示int，2表示float
     int paramnum;    //形式参数个数
     char alias[10];  //别名，为解决嵌套层次使用，可以使每个数据名称唯一
     char flag;       //符号标记缩写，函数：'F'  变量：'V'   参数：'P'  临时变量：'T'
     char offset;     //外部变量和局部变量，在其静态数据区或活动记录中的偏移量；
-                     //或函数活动记录大小，目标代码生成时使用
-                     //其它你需要补充的信息可以增加保存...
+    //数组部分
+    struct arrnode *arrlist;
+    int dimension;                    
 };
 /*符号表，是一个顺序栈，index初值为0*/
 struct symboltable {

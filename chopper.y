@@ -37,9 +37,10 @@
 %token <type_char> CHAR         //指定是type_char类型
 /*其他bison对该文件编译时，带参数-d，生成的exp.tab.h中给这些单词进行编码，可在lex.l中包含parser.tab.h使用这些单词种类码，见附件1。如下*/
 
-%token LP RP LC RC SEMI COMMA
+%token LP RP LC RC LB RB SEMI COMMA
 %token PLUSOP MINUSOP STAROP DIVOP INC DEC PLUS MINUS STAR DIV ASSIGNOP AND OR NOT
 %token IF ELSE WHILE RETURN BREAK CONTINUE
+%token ARR_DEC ARR_EXP  //用于声明和运算的数组token
 
 %right ASSIGNOP PLUSOP MINUSOP STAROP DIVOP
 %left OR
@@ -48,8 +49,8 @@
 %left PLUS MINUS
 %left STAR DIV
 %right UMINUS NOT INC DEC
-%right LC LP
-%left RC RP
+%right LC LP LB
+%left RC RP RB
 
 %nonassoc LOWER_THEN_ELSE
 %nonassoc ELSE
@@ -74,7 +75,8 @@ ExtDecList: VarDec { $$ = $1; }
     | VarDec COMMA ExtDecList { $$ = mknode(EXT_DEC_LIST, $1, $3, NULL, yylineno); }
     ;  
 /* ID结点，标识符符号串存放结点的type_id */
-VarDec: ID { $$ = mknode(ID, NULL, NULL, NULL, yylineno); strcpy($$->type_id, $1); }   
+VarDec: ID { $$ = mknode(ID, NULL, NULL, NULL, yylineno); strcpy($$->type_id, $1); }
+    | VarDec LB INT RB { $$ = mknode(ARR_DEC, $1, NULL, NULL, yylineno); $$->type_int = $3; }  //数组定义
     ;
 /* 注意函数名的存放 */
 FuncDec: ID LP VarList RP { $$ = mknode(FUNC_DEC, $3, NULL, NULL, yylineno); strcpy($$->type_id, $1); }
@@ -129,7 +131,8 @@ Exp: Exp ASSIGNOP Exp   { $$ = mknode(ASSIGNOP, $1, $3, NULL, yylineno); strcpy(
     | Exp INC           { $$ = mknode(INC, $1, NULL, NULL, yylineno); strcpy($$->type_id, "INC"); }  // a++
     | DEC Exp           { $$ = mknode(DEC, $2, NULL, NULL, yylineno); strcpy($$->type_id, "DEC"); }  // --a
     | Exp DEC           { $$ = mknode(DEC, $1, NULL, NULL, yylineno); strcpy($$->type_id, "DEC"); }  // a--
-    | LP Exp RP         { $$ = $2; }
+    | LP Exp RP         { $$ = $2; }    
+    | Exp LB Exp RB     { $$ = mknode(ARR_EXP, $1, $3, NULL, yylineno); }  // 数组运算 a + b[1 + 2]
     | MINUS Exp %prec UMINUS { $$ = mknode(UMINUS, $2, NULL, NULL, yylineno); strcpy($$->type_id, "UMINUS"); }
     | NOT Exp           { $$ = mknode(NOT, $2, NULL, NULL, yylineno); strcpy($$->type_id, "NOT"); }
     | ID LP Args RP     { $$ = mknode(FUNC_CALL, $3, NULL, NULL, yylineno); strcpy($$->type_id, $1); }
