@@ -41,6 +41,7 @@ id          [A-Za-z_][A-Za-z0-9_]*
 "if"        { return IF; }
 "else"      { return ELSE; }
 "while"     { return WHILE; }
+"for"       { return FOR; }
 "break"     { return BREAK; }
 "continue"  { return CONTINUE; }
 {id}        { strcpy(yylval.type_id, yytext); return ID; }  //由于优先级从上到下，因此该id不可放在关键字前，否则不会被识别为关键字而识别为标识符

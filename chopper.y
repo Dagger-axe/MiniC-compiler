@@ -29,7 +29,7 @@
 
 /*用%type来指定非终结符的语义值类型，用<>选择union中某个类型，后面列出同类型的非终结符*/
 %type <ptr> Program ExtDefList ExtDef Specifier ExtDecList FuncDec CompSt VarList VarDec ParamDec Stmt StmList DefList Def DecList Dec Exp Args
-
+%type <ptr> ForDec  //for循环声明
 /* 用%token来指定终结符的语义值类型，与非终结符类似*/
 %token <type_int> INT           //指定是type_int类型，用于AST树建立
 %token <type_id> ID RELOP TYPE //指定是type_id 类型
@@ -39,8 +39,9 @@
 
 %token LP RP LC RC LB RB SEMI COMMA
 %token PLUSOP MINUSOP STAROP DIVOP INC DEC PLUS MINUS STAR DIV ASSIGNOP AND OR NOT
-%token IF ELSE WHILE RETURN BREAK CONTINUE
+%token IF ELSE WHILE RETURN BREAK CONTINUE FOR
 %token ARR_DEC ARR_EXP  //用于声明和运算的数组token
+%token FOR_DEC  //用于for循环
 
 %right ASSIGNOP PLUSOP MINUSOP STAROP DIVOP
 %left OR
@@ -100,9 +101,13 @@ Stmt: Exp SEMI { $$ = mknode(EXP_STMT, $1, NULL, NULL, yylineno); }
     | IF LP Exp RP Stmt %prec LOWER_THEN_ELSE { $$ = mknode(IF_THEN, $3, $5, NULL, yylineno); }
     | IF LP Exp RP Stmt ELSE Stmt { $$ = mknode(IF_THEN_ELSE, $3, $5, $7, yylineno); }
     | WHILE LP Exp RP Stmt { $$ = mknode(WHILE, $3, $5, NULL, yylineno); }
+    | FOR LP ForDec RP Stmt { $$ = mknode(FOR, $3, $5, NULL, yylineno); }
     | BREAK SEMI { $$ = mknode(BREAK, NULL, NULL, NULL, yylineno); }
     | CONTINUE SEMI { $$ = mknode(CONTINUE, NULL, NULL, NULL, yylineno); }
     ;  
+/* for循环 */
+ForDec: Exp SEMI Exp SEMI Exp { $$ = mknode(FOR_DEC, $1, $3, $5, yylineno); } 
+    ;
 DefList: { $$ = NULL; }
     | Def DefList { $$ = mknode(DEF_LIST, $1, $2, NULL, yylineno); }
     | error SEMI { $$ = NULL; }

@@ -79,10 +79,12 @@ extern int yydebug;
     RETURN = 289,
     BREAK = 290,
     CONTINUE = 291,
-    ARR_DEC = 292,
-    ARR_EXP = 293,
-    UMINUS = 294,
-    LOWER_THEN_ELSE = 295
+    FOR = 292,
+    ARR_DEC = 293,
+    ARR_EXP = 294,
+    FOR_DEC = 295,
+    UMINUS = 296,
+    LOWER_THEN_ELSE = 297
   };
 #endif
 
@@ -99,7 +101,7 @@ union YYSTYPE
     char type_char[4];
 	struct node *ptr;
 
-#line 103 "chopper.tab.h" /* yacc.c:1909  */
+#line 105 "chopper.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
