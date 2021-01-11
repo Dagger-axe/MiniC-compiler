@@ -1,9 +1,8 @@
 #include "def.h"
-int in_loop = 0;  //标记是否在循环里
 int loop_lev = 0;  //标记当前循环的层数
 
 char *strcat0(char *s1, char *s2) {
-    static char result[10];
+    static char result[16];
     strcpy(result, s1);
     strcat(result, s2);
     return result;
@@ -11,7 +10,7 @@ char *strcat0(char *s1, char *s2) {
 
 char *newAlias() {
     static int no = 1;
-    char s[10];
+    char s[16];
     // itoa(no++, s, 10);
     sprintf(s, "%d", no++);
     return strcat0("v", s);
@@ -19,7 +18,7 @@ char *newAlias() {
 
 char *newLabel() {
     static int no = 1;
-    char s[10];
+    char s[16];
     // itoa(no++, s, 10);
     sprintf(s, "%d", no++);
     return strcat0("label_", s);
@@ -27,7 +26,7 @@ char *newLabel() {
 
 char *newTemp() {
     static int no = 1;
-    char s[10];
+    char s[16];
     // itoa(no++, s, 10);
     sprintf(s, "%d", no++);
     return strcat0("temp_", s);
@@ -162,7 +161,7 @@ void semantic_error(int line, char *msg1, char *msg2) {
 void prn_symbol() {  //显示符号表
     int i = 0;
     char symbol_type[7];
-    printf("%6s %6s %6s  %6s %4s %6s\n", "变量名", "别 名", "层 号", "类  型", "标记", "偏移量");
+    printf("%6s    %16s    %6s   %6s  %4s %6s\n", "变量名", "别名", "层号", "类型", "标记", "偏移量");
     for (i = 0; i < symbolTable.index; i++) {
         if (symbolTable.symbols[i].type == INT) {
             strcpy(symbol_type, "int");
@@ -171,7 +170,7 @@ void prn_symbol() {  //显示符号表
         } else if (symbolTable.symbols[i].type == CHAR) {
             strcpy(symbol_type, "char");
         }
-        printf("%6s %6s %6d  %6s %4c %6d\n", symbolTable.symbols[i].name, symbolTable.symbols[i].alias, symbolTable.symbols[i].level, symbol_type,
+        printf("%6s %16s %6d %6s %4c %6d\n", symbolTable.symbols[i].name, symbolTable.symbols[i].alias, symbolTable.symbols[i].level, symbol_type,
                symbolTable.symbols[i].flag, symbolTable.symbols[i].offset);
     }
 }
@@ -477,7 +476,7 @@ void Exp(struct node *T) {  //处理基本表达式，参考文献[1]p82的思�
                 break;
             case ARR_EXP:
 				T0 = T;
-				while(T0->kind != ID) T0 = T0 -> ptr[0];  //找到该数组
+				while (T0->kind != ID) T0 = T0->ptr[0];  //找到该数组
 				rtn = searchSymbolTable(T0->type_id);
 				if (rtn == -1) {
 					semantic_error(T->position, "", "数组未定义");
@@ -846,7 +845,7 @@ void semantic_Analysis(struct node *T) {
                     T->width += T->ptr[1]->width;
                     T->code = merge(2, T->code, T->ptr[1]->code);
                 }
-//                prn_symbol();  //c在退出一个符合语句前显示的符号表
+//                prn_symbol();  //在退出一个符合语句前显示的符号表
                 LEV--;                                                                        //出复合语句，层号减1
                 symbolTable.index = symbol_scope_Stack.ScopeArray[--symbol_scope_Stack.top];  //删除该作用域中的符号
                 break;
@@ -1016,14 +1015,12 @@ void semantic_Analysis(struct node *T) {
                 boolExp(T->ptr[0]);  //循环条件，要单独按短路代码处理
                 T->width = T->ptr[0]->width;
                 strcpy(T->ptr[1]->Snext, newLabel());
-                in_loop = 1;
                 loop_lev++;
                 breakcode = genGoto(T->Snext);             //记录出口，即整个while的出口
                 continuecode = genGoto(T->ptr[1]->Snext);  //记录入口，即循环体执行结束后下一次执行的入口
                 semantic_Analysis(T->ptr[1]);              //循环体
                 if (T->width < T->ptr[1]->width) T->width = T->ptr[1]->width;
                 T->code = merge(5, genLabel(T->ptr[1]->Snext), T->ptr[0]->code, genLabel(T->ptr[0]->Etrue), T->ptr[1]->code, genGoto(T->ptr[1]->Snext));
-                in_loop = 0;
                 loop_lev--;
                 breakcode = NULL;
                 continuecode = NULL;
@@ -1032,38 +1029,39 @@ void semantic_Analysis(struct node *T) {
                 //处理初始声明语句
                 T->ptr[0]->ptr[0]->offset = T->offset;
 				semantic_Analysis(T->ptr[0]->ptr[0]);
-                //处理条件语句，此时应先创建Label                
-                strcpy(T->ptr[1]->Snext, newLabel());  //创建循环语句的入口Lable
-                breakcode = NULL;
-                continuecode = NULL;
+                //处理条件语句，此时应先创建Label
+                strcpy(T->ptr[0]->ptr[0]->Snext, newLabel());  //创建循环语句的入口Label
                 strcpy(T->ptr[0]->ptr[1]->Etrue, newLabel());  // ptr[0]存循环条件，子结点继承属性的计算
                 strcpy(T->ptr[0]->ptr[1]->Efalse, T->Snext);
-                T->ptr[0]->ptr[1]->offset = T->offset + T->ptr[0]->ptr[0]->width;
-                boolExp(T->ptr[0]->ptr[1]);  //循环条件，要单独按短路代码处理
-                strcpy(T->ptr[0]->ptr[1]->Snext, newLabel());
+                T->ptr[0]->ptr[1]->offset = T->ptr[0]->ptr[0]->offset + T->ptr[0]->ptr[0]->width;
+                boolExp(T->ptr[0]->ptr[1]);  //循环条件，要单独按独立代码处理
+                //处理自增语句 
+                strcpy(T->ptr[0]->ptr[1]->Snext, newLabel());  //每次循环体执行完的自增语句的Label 
+                T->ptr[0]->ptr[2]->offset = T->ptr[0]->ptr[1]->offset + T->ptr[0]->ptr[1]->width;
+                semantic_Analysis(T->ptr[0]->ptr[2]);
                 //处理循环主体
-                in_loop = 1;
                 loop_lev++;
                 breakcode = genGoto(T->Snext);             //记录出口，即整个for的出口
-                continuecode = genGoto(T->ptr[1]->Snext);  //记录入口，即循环体执行结束后下一次执行的入口                
-				T->ptr[1]->offset = T->offset + T->ptr[0]->ptr[0]->width + T->ptr[0]->ptr[1]->width;
+                continuecode = genGoto(T->ptr[0]->ptr[0]->Snext);  //记录入口，即循环体执行结束后下一次执行的入口                
+				T->ptr[1]->offset = T->ptr[0]->ptr[2]->offset + T->ptr[0]->ptr[2]->width;
 				semantic_Analysis(T->ptr[1]);
-				loop_lev--;
-                //处理每轮循环的操作
-                T->ptr[0]->ptr[2]->offset = T->ptr[1]->offset + T->ptr[1]->width;
-                semantic_Analysis(T->ptr[0]->ptr[2]);
 				T->width = T->ptr[0]->width + T->ptr[1]->width;
                 if (T->width < T->ptr[1]->width) T->width = T->ptr[1]->width;
-                T->code = merge(7, T->ptr[0]->ptr[0]->code, genLabel(T->ptr[1]->Snext), T->ptr[0]->ptr[1]->code, 
-                                genLabel(T->ptr[0]->ptr[1]->Etrue), T->ptr[1]->code, T->ptr[0]->ptr[2]->code, 
-                                genGoto(T->ptr[1]->Snext));
-                in_loop = 0;
+                /* 循环初值，循环初值下一条语句的Label也是整体循坏的开始，接着是循环判断语句，
+                 * 循环自增语句入口Label，循环自增语句，goto循环起始，循环判断语句真条件开始的Label也是循环入口，
+                 * 循环体，goto循环自增语句入口
+                 */
+                T->code = merge(9, T->ptr[0]->ptr[0]->code, genLabel(T->ptr[0]->ptr[0]->Snext),
+                                T->ptr[0]->ptr[1]->code, genLabel(T->ptr[0]->ptr[1]->Snext),
+                                T->ptr[0]->ptr[2]->code, genGoto(T->ptr[0]->ptr[0]->Snext),
+                                genLabel(T->ptr[0]->ptr[1]->Etrue), T->ptr[1]->code,
+                                genGoto(T->ptr[0]->ptr[1]->Snext));
                 loop_lev--;
                 breakcode = NULL;
                 continuecode = NULL;
 				break;
             case BREAK:
-                if (in_loop == 0) semantic_error(T->position, T->type_id, "\"break\"不在循环中");
+                if (loop_lev <= 0) semantic_error(T->position, T->type_id, "\"break\"不在循环中");
                 T->code = breakcode;
                 break;
             case CONTINUE:

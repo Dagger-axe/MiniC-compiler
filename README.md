@@ -64,14 +64,15 @@ int fibo(int num) {
 }
 
 int main() {
-    int i = 1, j = 2, arr[2][3];  //测试1声明
-    int num = 1;  //测试2声明
+    int i = 1, j = 2, arr[2][3];  //测试1、3声明
+    int num;  //测试2、3声明
     char ch = 'a';
 
-    arr[1][2] = read();  //测试1
-    write(arr[1][2]);
+    num = read();  //测试1
+    write(fibo(num));  //等于输入的Fibonacci
 
-    while (num <= 4) {  //测试2
+    num = 1;  //测试2
+    while (num <= 4) {
         if (ch == 'a') {
             num += 1;
             ch = 'B';
@@ -79,7 +80,17 @@ int main() {
         } else if (num == 3) break;
         num++;
     }
-    write(num);
+    write(num);  //等于3
+
+    num = 0;  //测试3
+    for (i = 0; i < 2; ++i) {
+        for (j = 0; j < 3; ++j) {
+            arr[i][j] = i + j;
+            num += arr[i][j];
+        }
+        num++;
+    }
+    write(num);  //等于11
     
     return 0;
 }
@@ -101,9 +112,10 @@ lyg@DESKTOP-C3PNG35:/mnt/e/编译原理/实验/compiler$
 &emsp;&emsp;运行与预期相符：
 
 ```
-Enter an integer:369
-369
+Enter an integer:9
+34
 3
+11
 ```
 
-![image-20201230222507327](README.assets/image-20201230222507327.png)
+![image-20210112020036461](README.assets/image-20210112020036461.png)

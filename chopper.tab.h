@@ -98,7 +98,7 @@ union YYSTYPE
 	int type_int;
 	float type_float;
 	char type_id[32];
-  char type_char[4];
+    char type_char[4];
 	struct node *ptr;
 
 #line 105 "chopper.tab.h" /* yacc.c:1909  */

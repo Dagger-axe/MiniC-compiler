@@ -2,7 +2,7 @@
 
 void displayAST(struct node *T, int indent) {  //对抽象语法树的先根遍历
     int i = 1;
-    struct node *T0;
+    struct node *T0, *T1;
     //遍历数组所需
     int arrdimt;  //数组维度的判断标准
     int *arrdimt_info;  //数组维度信息
@@ -69,8 +69,7 @@ void displayAST(struct node *T, int indent) {  //对抽象语法树的先根遍�
                     T0 = T0->ptr[0];
                 }
                 printf("%*c数组名：%s\n", indent + 3, ' ', array[0]->ptr[0]->type_id);
-                while (i < arrdimt)
-                {
+                while (i < arrdimt) {
                     printf("%*c数组第%d维度表达式：\n", indent + 3, ' ', i + 1);
                     displayAST(array[i]->ptr[1], indent + 6);
                     i++;
@@ -83,7 +82,7 @@ void displayAST(struct node *T, int indent) {  //对抽象语法树的先根遍�
                 break;
             }
             case FUNC_DEF: {
-                printf("%*c函数定义：\n", indent, ' ');
+                printf("函数定义：\n");
                 displayAST(T->ptr[0], indent + 3);  //显示函数返回类型
                 displayAST(T->ptr[1], indent + 3);  //显示函数名和参数
                 displayAST(T->ptr[2], indent + 3);  //显示函数体
@@ -104,7 +103,7 @@ void displayAST(struct node *T, int indent) {  //对抽象语法树的先根遍�
                 break;
             }
             case PARAM_DEC: {
-                printf("%*c类型：%s, 参数名：%s\n", indent, ' ', T->ptr[0]->type == INT ? "int" : "float", T->ptr[1]->type_id);
+                printf("%*c类型：%s  参数名：%s\n", indent, ' ', T->ptr[0]->type == INT ? "int" : "float", T->ptr[1]->type_id);
                 break;
             }
             case EXP_STMT: {
@@ -140,15 +139,17 @@ void displayAST(struct node *T, int indent) {  //对抽象语法树的先根遍�
             }
             case FOR:			
                 printf("%*c循环语句：\n", indent, ' ');
-                printf("%*c循环条件：\n", indent + 3, ' ');
-                displayAST(T->ptr[0], indent + 6); //显示循环条件
+                displayAST(T->ptr[0], indent + 3); //显示循环初值、条件和增量
                 printf("%*c循环体：\n", indent + 3, ' ');
                 displayAST(T->ptr[1], indent + 6); //显示循环体
                 break;
             case FOR_DEC:
-                displayAST(T->ptr[0], indent + 6);
-                displayAST(T->ptr[1], indent + 6);
-                displayAST(T->ptr[2], indent + 6);
+                printf("%*c循环初值：\n", indent, ' ');
+                displayAST(T->ptr[0], indent + 3);
+                printf("%*c循环条件：\n", indent, ' ');
+                displayAST(T->ptr[1], indent + 3);
+                printf("%*c循环增量：\n", indent, ' ');
+                displayAST(T->ptr[2], indent + 3);
                 break;
             case BREAK: {
                 printf("%*c循环终止：BREAK\n", indent, ' ');
@@ -192,27 +193,24 @@ void displayAST(struct node *T, int indent) {  //对抽象语法树的先根遍�
                 T0 = T;
                 while (T0) {
                     if (T0->ptr[0]->kind == ID)
-                        printf("%*c %s\n", indent + 3, ' ', T0->ptr[0]->type_id);
-                    else if (T0->ptr[0]->kind == ASSIGNOP) {
-                        printf("%*c %s ASSIGNOP\n ", indent + 3, ' ',
-                               T0->ptr[0]->ptr[0]->type_id);  //输出num = 1;的num
-                        //显示初始化表达式
-                        displayAST(T0->ptr[0]->ptr[1], indent + strlen(T0->ptr[0]->ptr[0]->type_id) + 4);
-                    } else if (T0->ptr[0]->kind == ARR_DEC) {
-                        printf("%*c数组声明：\n", indent+3, ' ');
-                        T0 = T;
+                        printf("%*c%s\n", indent + 3, ' ', T0->ptr[0]->type_id);
+                    else if (T0->ptr[0]->kind == ASSIGNOP) 
+                        displayAST(T0->ptr[0], indent + 3);
+                    else if (T0->ptr[0]->kind == ARR_DEC) {
+                        printf("%*c数组声明：\n", indent + 3, ' ');
+                        T1 = T0;
                         arrdimt = 1;
-                        while (T0->ptr[0]->kind != ID) {
-                            T0 = T0->ptr[0];
+                        while (T1->ptr[0]->kind != ID) {
+                            T1 = T1->ptr[0];
                             arrdimt++;
                         }
-                        T0 = T;
+                        T1 = T0;
                         array = (struct node **)malloc(sizeof(struct node *) * arrdimt);
                         i = arrdimt;
-                        while (T0->ptr[0]) {
+                        while (T1->ptr[0]) {
                             i--;
-                            array[i] = T0;
-                            T0 = T0->ptr[0];
+                            array[i] = T1;
+                            T1 = T1->ptr[0];
                         }
                         printf("%*c维度：", indent + 6, ' ');
                         while (i < arrdimt - 1) {
@@ -222,7 +220,6 @@ void displayAST(struct node *T, int indent) {  //对抽象语法树的先根遍�
                         printf("\n");
                         printf("%*c数组名：%s\n", indent + 6, ' ', array[0]->ptr[0]->type_id);
                         free(array);
-                        break;  //已深度遍历，提前break
 					}
                     T0 = T0->ptr[1];
                 }

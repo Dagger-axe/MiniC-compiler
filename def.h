@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "chopper.tab.h"
 
 enum node_kind {
@@ -45,7 +44,7 @@ struct operandStruct { /*中间代码操作数信息*/
     union {
         int const_int;      //整常数值，立即数
         float const_float;  //浮点常数值，立即数
-        int const_char;    //字符常数值，立即数
+        int const_char;     //字符常数值，立即数
         char id[33];        //变量、临时变量的别名、标号字符串
     };
     int level;   //变量的层号，0表示是全局变量，数据保存在静态数据区
@@ -95,7 +94,7 @@ struct symbol {     //这里只列出了一个符号表项的部分属性，没�
     int level;      //层号，外部变量名或函数名，层号为0；形参为1；进入复合语句加1，退出减1
     int type;        //变量类型或函数返回值类型, 1表示int，2表示float
     int paramnum;    //形式参数个数
-    char alias[10];  //别名，为解决嵌套层次使用，可以使每个数据名称唯一
+    char alias[16];  //别名，为解决嵌套层次使用，可以使每个数据名称唯一
     char flag;       //符号标记缩写，函数：'F'  变量：'V'   参数：'P'  临时变量：'T'
     char offset;     //外部变量和局部变量，在其静态数据区或活动记录中的偏移量；
     //数组部分

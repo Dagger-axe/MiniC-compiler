@@ -1,0 +1,36 @@
+int fibo(int num) {
+    if (num == 1 || num == 2) return 1;
+    else return fibo(num - 1) + fibo(num - 2);
+}
+
+int main() {
+    int i = 1, j = 2, arr[2][3];  //测试1、3声明
+    int num;  //测试2、3声明
+    char ch = 'a';
+
+    num = read();  //测试1
+    write(fibo(num));  //等于输入的Fibonacci
+
+    num = 1;  //测试2
+    while (num <= 4) {
+        if (ch == 'a') {
+            num += 1;
+            ch = 'B';
+            continue;
+        } else if (num == 3) break;
+        num++;
+    }
+    write(num);  //等于3
+
+    num = 0;  //测试3
+    for (i = 0; i < 2; ++i) {
+        for (j = 0; j < 3; ++j) {
+            arr[i][j] = i + j;
+            num += arr[i][j];
+        }
+        num++;
+    }
+    write(num);  //等于11
+    
+    return 0;
+}

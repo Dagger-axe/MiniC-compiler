@@ -2146,7 +2146,7 @@ yyreturn:
 void yyerror(const char* fmt, ...){
     va_list ap;
     va_start(ap, fmt);
-    fprintf(stderr, "Grammar Error Found at Line %d Column %d: ", yylloc.first_line, yylloc.first_column);
+    fprintf(stderr, "[ERROR]***Grammar Error Found at Line %d Column %d: ", yylloc.first_line, yylloc.first_column);
     vfprintf(stderr, fmt, ap);
     fprintf(stderr, ".\n");
 }

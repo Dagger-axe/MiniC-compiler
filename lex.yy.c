@@ -567,8 +567,8 @@ int yy_flex_debug = 0;
 char *yytext;
 #line 1 "chopper.l"
 #line 5 "chopper.l"
-    #include "chopper.tab.h"
     #include <string.h>
+    #include "chopper.tab.h"
     #include "def.h"
     int yycolumn = 1;
     #define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno; \
@@ -582,7 +582,7 @@ char *yytext;
         struct node *ptr;
     } YYLVAL;
     #define YYSTYPE YYLVAL
-    int to_int(char *str);
+    int to_int(char *str);  //自编写的字符串转int类型函数，支持十六进制的转换
 #line 587 "lex.yy.c"
 #line 588 "lex.yy.c"
 
