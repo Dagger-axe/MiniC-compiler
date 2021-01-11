@@ -1,13 +1,4 @@
 #include "def.h"
-struct node *mknode(int kind, struct node *first, struct node *second, struct node *third, int position) {
-    struct node *T = (struct node *)malloc(sizeof(struct node));
-    T->kind = kind;
-    T->ptr[0] = first;
-    T->ptr[1] = second;
-    T->ptr[2] = third;
-    T->position = position;
-    return T;
-}
 
 void displayAST(struct node *T, int indent) {  //对抽象语法树的先根遍历
     int i = 1;
@@ -297,26 +288,4 @@ void displayAST(struct node *T, int indent) {  //对抽象语法树的先根遍�
             }
         }
     }
-}
-
-/*---将int型的输入转换为int值，可匹配十六进制---*/
-int to_int(char *str) {
-    int len = strlen(str), res = 0;
-    if (len > 2 && str[0] == '0' && str[1] == 'x') {
-        for (int i = 2; i < len; ++i) {
-            if (str[i] >= 'A' && str[i] <= 'F')
-                res = res * 16 + str[i] - 'A' + 10;
-            else if (str[i] >= 'a' && str[i] <= 'f')
-                res = res * 16 + str[i] - 'a' + 10;
-            else
-                res = res * 16 + str[i] - '0';
-        }
-    } else if (str[0] == '+') {
-        res = atoi(str + 1);
-    } else if (str[0] == '-') {
-        res = atoi(str + 1);
-        res *= -1;
-    } else
-        res = atoi(str);
-    return res;
 }

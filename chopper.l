@@ -17,6 +17,7 @@
         struct node *ptr;
     } YYLVAL;
     #define YYSTYPE YYLVAL
+    int to_int(char *str);  //自编写的字符串转int类型函数，支持十六进制的转换
 %}
 
 char        ('[A-Za-z0-9]')
@@ -73,3 +74,25 @@ id          [A-Za-z_][A-Za-z0-9_]*
 [ \r\t]     { }  //空格、回车、制表符不做处理
 .			{ printf("Error type A :Mysterious character \"%s\"\n\t at Line %d\n", yytext, yylineno); }
 %%
+
+int to_int(char *str) {
+/*---将int型的输入转换为int值，可匹配十六进制---*/
+    int len = strlen(str), res = 0;
+    if (len > 2 && str[0] == '0' && str[1] == 'x') {
+        for (int i = 2; i < len; ++i) {
+            if (str[i] >= 'A' && str[i] <= 'F')
+                res = res * 16 + str[i] - 'A' + 10;
+            else if (str[i] >= 'a' && str[i] <= 'f')
+                res = res * 16 + str[i] - 'a' + 10;
+            else
+                res = res * 16 + str[i] - '0';
+        }
+    } else if (str[0] == '+') {
+        res = atoi(str + 1);
+    } else if (str[0] == '-') {
+        res = atoi(str + 1);
+        res *= -1;
+    } else
+        res = atoi(str);
+    return res;
+}

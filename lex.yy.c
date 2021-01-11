@@ -582,8 +582,9 @@ char *yytext;
         struct node *ptr;
     } YYLVAL;
     #define YYSTYPE YYLVAL
-#line 586 "lex.yy.c"
+    int to_int(char *str);
 #line 587 "lex.yy.c"
+#line 588 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -800,10 +801,10 @@ YY_DECL
 		}
 
 	{
-#line 27 "chopper.l"
+#line 28 "chopper.l"
 
 
-#line 807 "lex.yy.c"
+#line 808 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -873,227 +874,227 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 29 "chopper.l"
+#line 30 "chopper.l"
 { }  //行注释
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 30 "chopper.l"
+#line 31 "chopper.l"
 { }  //块注释
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 32 "chopper.l"
+#line 33 "chopper.l"
 { yylval.type_int = to_int(yytext); return INT; }    //int类型可匹配+-号及0x12a4的十六进制表示
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 33 "chopper.l"
+#line 34 "chopper.l"
 { yylval.type_float = atof(yytext); return FLOAT; }  //float可匹配+-号及“.123”的表示
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 34 "chopper.l"
+#line 35 "chopper.l"
 { strcpy(yylval.type_char, yytext); return CHAR; }   //char类型
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 36 "chopper.l"
+#line 37 "chopper.l"
 { strcpy(yylval.type_id, yytext); return TYPE; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 37 "chopper.l"
+#line 38 "chopper.l"
 { strcpy(yylval.type_id, yytext); return TYPE; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 38 "chopper.l"
+#line 39 "chopper.l"
 { strcpy(yylval.type_id, "float"); return TYPE; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 39 "chopper.l"
+#line 40 "chopper.l"
 { strcpy(yylval.type_id, yytext); return TYPE; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 40 "chopper.l"
+#line 41 "chopper.l"
 { return RETURN; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 41 "chopper.l"
+#line 42 "chopper.l"
 { return IF; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 42 "chopper.l"
+#line 43 "chopper.l"
 { return ELSE; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 43 "chopper.l"
+#line 44 "chopper.l"
 { return WHILE; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 44 "chopper.l"
+#line 45 "chopper.l"
 { return FOR; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 45 "chopper.l"
+#line 46 "chopper.l"
 { return BREAK; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 46 "chopper.l"
+#line 47 "chopper.l"
 { return CONTINUE; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 47 "chopper.l"
+#line 48 "chopper.l"
 { strcpy(yylval.type_id, yytext); return ID; }  //由于优先级从上到下，因此该id不可放在关键字前，否则不会被识别为关键字而识别为标识符
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 49 "chopper.l"
+#line 50 "chopper.l"
 { return SEMI; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 50 "chopper.l"
+#line 51 "chopper.l"
 { return COMMA; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 51 "chopper.l"
+#line 52 "chopper.l"
 { strcpy(yylval.type_id, yytext); return RELOP; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 52 "chopper.l"
+#line 53 "chopper.l"
 { return PLUSOP; }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 53 "chopper.l"
+#line 54 "chopper.l"
 { return MINUSOP; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 54 "chopper.l"
+#line 55 "chopper.l"
 { return STAROP; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 55 "chopper.l"
+#line 56 "chopper.l"
 { return DIVOP; }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 56 "chopper.l"
+#line 57 "chopper.l"
 { return ASSIGNOP; }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 57 "chopper.l"
+#line 58 "chopper.l"
 { return INC; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 58 "chopper.l"
+#line 59 "chopper.l"
 { return DEC; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 59 "chopper.l"
+#line 60 "chopper.l"
 { return PLUS; }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 60 "chopper.l"
+#line 61 "chopper.l"
 { return MINUS; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 61 "chopper.l"
+#line 62 "chopper.l"
 { return STAR; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 62 "chopper.l"
+#line 63 "chopper.l"
 { return DIV; }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 63 "chopper.l"
+#line 64 "chopper.l"
 { return AND; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 64 "chopper.l"
+#line 65 "chopper.l"
 { return OR; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 65 "chopper.l"
+#line 66 "chopper.l"
 { return NOT; }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 66 "chopper.l"
+#line 67 "chopper.l"
 { return LP; }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 67 "chopper.l"
+#line 68 "chopper.l"
 { return RP; }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 68 "chopper.l"
+#line 69 "chopper.l"
 { return LC; }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 69 "chopper.l"
+#line 70 "chopper.l"
 { return RC; }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 70 "chopper.l"
+#line 71 "chopper.l"
 { return LB; }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 71 "chopper.l"
+#line 72 "chopper.l"
 { return RB; }
 	YY_BREAK
 case 41:
 /* rule 41 can match eol */
 YY_RULE_SETUP
-#line 72 "chopper.l"
+#line 73 "chopper.l"
 { yycolumn = 1; }  //记录行号以便输出错误信息，换行后将列信息变为1
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 73 "chopper.l"
+#line 74 "chopper.l"
 { }  //空格、回车、制表符不做处理
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 74 "chopper.l"
+#line 75 "chopper.l"
 { printf("Error type A :Mysterious character \"%s\"\n\t at Line %d\n", yytext, yylineno); }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 75 "chopper.l"
+#line 76 "chopper.l"
 ECHO;
 	YY_BREAK
-#line 1097 "lex.yy.c"
+#line 1098 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2110,5 +2111,27 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 75 "chopper.l"
+#line 76 "chopper.l"
 
+
+int to_int(char *str) {
+/*---将int型的输入转换为int值，可匹配十六进制---*/
+    int len = strlen(str), res = 0;
+    if (len > 2 && str[0] == '0' && str[1] == 'x') {
+        for (int i = 2; i < len; ++i) {
+            if (str[i] >= 'A' && str[i] <= 'F')
+                res = res * 16 + str[i] - 'A' + 10;
+            else if (str[i] >= 'a' && str[i] <= 'f')
+                res = res * 16 + str[i] - 'a' + 10;
+            else
+                res = res * 16 + str[i] - '0';
+        }
+    } else if (str[0] == '+') {
+        res = atoi(str + 1);
+    } else if (str[0] == '-') {
+        res = atoi(str + 1);
+        res *= -1;
+    } else
+        res = atoi(str);
+    return res;
+}

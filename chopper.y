@@ -3,9 +3,7 @@
 %locations
 %{
     #include <stdio.h>
-    #include <math.h>
     #include <string.h>
-    #include <stdarg.h>
     #include <unistd.h>
     #include "def.h"
     extern int yylineno;
@@ -14,8 +12,7 @@
     //用户定义输出文件
     char filename[64];
     //消除warning的声明
-    void yyerror(const char* fmt, ...);
-    void displayAST(struct node *, int);   
+    void yyerror(const char* fmt, ...);   
     int yylex();
 %}
 /*给出语法分析中非终结符和终结符的类型，供不同文法符号使用；对无语义子程序的规则，默认使用$$=$1，需要相应的类型匹配；默认类型是整型；样例中给出了整型、浮点型、字符串数组、抽象语法树节点4种，具体根据自己情况增减*/
@@ -27,15 +24,12 @@
 	struct node *ptr;
 };
 
-/*用%type来指定非终结符的语义值类型，用<>选择union中某个类型，后面列出同类型的非终结符*/
 %type <ptr> Program ExtDefList ExtDef Specifier ExtDecList FuncDec CompSt VarList VarDec ParamDec Stmt StmList DefList Def DecList Dec Exp Args
 %type <ptr> ForDec  //for循环声明
-/* 用%token来指定终结符的语义值类型，与非终结符类似*/
 %token <type_int> INT           //指定是type_int类型，用于AST树建立
-%token <type_id> ID RELOP TYPE //指定是type_id 类型
+%token <type_id> ID RELOP TYPE  //指定是type_id 类型
 %token <type_float> FLOAT       //指定是type_float类型
 %token <type_char> CHAR         //指定是type_char类型
-/*其他bison对该文件编译时，带参数-d，生成的exp.tab.h中给这些单词进行编码，可在lex.l中包含parser.tab.h使用这些单词种类码，见附件1。如下*/
 
 %token LP RP LC RC LB RB SEMI COMMA
 %token PLUSOP MINUSOP STAROP DIVOP INC DEC PLUS MINUS STAR DIV ASSIGNOP AND OR NOT
@@ -55,7 +49,7 @@
 
 %nonassoc LOWER_THEN_ELSE
 %nonassoc ELSE
-/*----------------------------------------------------------------------------*/
+
 %%
 /* 文法规约终点：语义分析入口 */
 Program: ExtDefList { semantic_AnalysisInit($1, filename); }  //displayAST($1, 0);
@@ -153,6 +147,24 @@ Args: Exp COMMA Args { $$ = mknode(ARGS, $1, $3, NULL, yylineno); }
 
 %%
 
+void yyerror(const char* fmt, ...){
+    va_list ap;
+    va_start(ap, fmt);
+    fprintf(stderr, "Grammar Error Found at Line %d Column %d: ", yylloc.first_line, yylloc.first_column);
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, ".\n");
+}
+
+struct node *mknode(int kind, struct node *first, struct node *second, struct node *third, int position) {
+    struct node *T = (struct node *)malloc(sizeof(struct node));
+    T->kind = kind;
+    T->ptr[0] = first;
+    T->ptr[1] = second;
+    T->ptr[2] = third;
+    T->position = position;
+    return T;
+}
+
 void print_help() {
     printf("Usage:\t  ./chopper [-h] <file-name> [object-file-path]\n\n");
     printf("-h\t\t    Shows this usage instructions\n");
@@ -193,16 +205,8 @@ int main(int argc, char *argv[]){
     } else strcpy(filename, "objectfile.s");
 
 	yyin = fopen(argv[1], "r");
-	if(!yyin) return 0;
+	if (!yyin) return 0;
 	yylineno = 1;
 	yyparse();
 	return 0;
-}
-
-void yyerror(const char* fmt, ...){
-    va_list ap;
-    va_start(ap, fmt);
-    fprintf(stderr, "Grammar Error Found at Line %d Column %d: ", yylloc.first_line, yylloc.first_column);
-    vfprintf(stderr, fmt, ap);
-    fprintf(stderr, ".\n");
 }

@@ -114,6 +114,7 @@ struct symbol_scope_array {  //用于查询栈顶位置以及在退出一层时�
 } symbol_scope_Stack;
 
 struct node *mknode(int kind, struct node *first, struct node *second, struct node *third, int position);
+void displayAST(struct node *, int);
 void semantic_AnalysisInit(struct node *T, char *filename);
 void semantic_Analysis(struct node *T);
 void boolExp(struct node *T);
