@@ -40,7 +40,7 @@ void displayAST(struct node *T, int indent) {  //对抽象语法树的先根遍�
                 while (T0->ptr[0]) {
                     i--;
                     arrdimt_info[i] = T0->type_int;   //获取数组维度
-                    if(!i) strcpy(arrname, T0 -> ptr[0] -> type_id);
+                    if(!i) strcpy(arrname, T0 ->ptr[0]->type_id);
                     T0 = T0->ptr[0];
                 }
                 printf("%*c维度：", indent + 3, ' ');

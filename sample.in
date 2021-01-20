@@ -4,8 +4,7 @@ int fibo(int num) {
 }
 
 int main() {
-    int i = 1, j = 2, arr[2][3];  //测试1、3声明
-    int num;  //测试2、3声明
+    int i = 1, j = 2, arr[2][3], num;  //测试声明
     char ch = 'a';
 
     num = read();  //测试1
